@@ -1,6 +1,6 @@
 # Memory Alpha MCP Server
 
-An MCP (Model Context Protocol) server that brings Star Trek knowledge from [Memory Alpha](https://memory-alpha.fandom.com/) into your AI sessions. Search articles, look up episodes, compare starships, take trivia quizzes, and get your code reviewed by Q himself.
+An MCP (Model Context Protocol) server that brings Star Trek knowledge from [Memory Alpha](https://memory-alpha.fandom.com/) into your AI sessions. Search articles, look up episodes, compare starships, simulate battles, build away teams, take trivia quizzes, and get your code reviewed by Q himself.
 
 > **Disclaimer:** This is an unofficial fan project. Not affiliated with CBS, Paramount, or Memory Alpha. All content is dynamically fetched from Memory Alpha's public API (CC-BY-SA licensed). No copyrighted material is embedded or redistributed.
 
@@ -58,9 +58,9 @@ src/
     wikitext.ts          #   Main parser: wtf_wikipedia wrapper, disambiguation detection
     infobox.ts           #   Brace-balanced sidebar/infobox extraction with regex fallback
     sections.ts          #   Section extraction by heading
-  tools/                 # 17 MCP tool implementations
-  prompts/               # 12 Trek-themed prompt templates
-  resources/             # 2 static reference resources
+  tools/                 # 24 MCP tool implementations
+  prompts/               # 16 Trek-themed prompt templates
+  resources/             # 4 static reference resources
   utils/
     cache.ts             #   In-memory TTL cache with LRU eviction (5min TTL, 100 entries)
     logger.ts            #   console.error wrapper (never console.log - corrupts stdio)
@@ -80,7 +80,7 @@ src/
 | `console.error` only | `console.log` corrupts the stdio MCP transport |
 | All responses as formatted text | Better for LLM consumption than raw JSON |
 
-## Tools (17)
+## Tools (24)
 
 ### Core Tools
 
@@ -132,6 +132,14 @@ Get details about a Star Trek episode: synopsis, writer, director, stardate, gue
 
 Provide either `title` or all three of `series` + `season` + `episode`.
 
+#### `list_episodes`
+List all episodes for a Star Trek series season.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `series` | string | yes | Series abbreviation (TOS, TNG, DS9, VOY, ENT, DIS, PIC, LD, PRO, SNW) |
+| `season` | number (1-10) | yes | Season number |
+
 #### `get_starship`
 Get details about a Star Trek starship: class, registry, armaments, crew complement.
 
@@ -145,6 +153,15 @@ Get info about a Star Trek species: homeworld, physiology, culture, quadrant.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `species` | string | yes | Species name (e.g. "Klingon", "Vulcan", "Borg", "Ferengi") |
+
+#### `character_lookup`
+Get details about a Star Trek character: rank, species, affiliation, biography, career history, and memorable quotes.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | yes | Character name (e.g. "Jean-Luc Picard", "Worf", "Seven of Nine") |
+
+Extracts sidebar data from individual/character/personnel templates. Automatically detects disambiguation pages.
 
 #### `get_timeline`
 Get Star Trek events for a specific in-universe year.
@@ -176,6 +193,17 @@ Look up Ferengi Rules of Acquisition by number, randomly, or search by keyword. 
 | `random` | boolean | no | Get a random Rule of Acquisition (default: false) |
 | `search` | string | no | Search rules by keyword |
 
+#### `stardate_converter`
+Convert between stardates and real-world dates, or get the current stardate. Supports both TOS-era and TNG-era conversion formulas.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `date` | string | no | Real-world date to convert (e.g. "2026-02-14", "March 5 1987"). Defaults to today. |
+| `stardate` | number | no | Stardate to convert to a real-world date (e.g. 41153.7) |
+| `era` | "TOS" \| "TNG" | no | Era for conversion formula (default: "TNG") |
+
+Provide either `date` or `stardate`. If neither is given, converts today's date.
+
 ### Fun Tools
 
 #### `compare`
@@ -201,7 +229,7 @@ Quote attribution challenge - guess which Star Trek character said it.
 | `difficulty` | "easy" \| "medium" \| "hard" | no | Difficulty level (default: "medium") |
 
 #### `alien_phrases`
-Look up phrases and vocabulary from Star Trek alien languages.
+Look up phrases and vocabulary from Star Trek alien languages. Extracts structured vocabulary sections (Common phrases, Vocabulary, Lexicon, etc.) when available, falling back to full article text.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -227,7 +255,45 @@ Assess survival odds in classic Trek redshirt style.
 
 Analyzes keywords in the description to compute survival probability, risk factors, probable cause of demise, and recommended last words.
 
-## Prompts (12)
+#### `battle_simulator`
+Pit two Star Trek ships against each other in a tactical analysis based on their specs. Fetches real ship data from Memory Alpha, compares combat-relevant specifications, and generates a battle narrative.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `ship1` | string | yes | First ship (e.g. "USS Enterprise (NCC-1701-D)") |
+| `ship2` | string | yes | Second ship (e.g. "Borg cube") |
+
+Returns a spec comparison table, combat probability percentages, predicted victor, and a dramatic battle narrative.
+
+#### `away_team_builder`
+Recommend an optimal away team composition for a mission based on crew specialties. Analyzes mission keywords to determine needed roles, selects from a crew database, and assesses mission risk.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `mission` | string | yes | Describe the mission (e.g. "Negotiate peace treaty with hostile species on a volcanic planet") |
+| `team_size` | number (2-6) | no | Number of team members (default: 4) |
+
+Returns recommended crew, mission analysis, required equipment, and risk assessment.
+
+#### `episode_recommender`
+Get episode recommendations based on a Star Trek episode you enjoyed. Analyzes the source episode's themes and categories to find related episodes.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `episode` | string | yes | Episode title you liked (e.g. "The Inner Light", "In the Pale Moonlight") |
+| `count` | number (1-10) | no | Number of recommendations (default: 5) |
+
+#### `holodeck_program`
+Generate a Star Trek holodeck program designation, safety assessment, and malfunction probability. Analyzes the scenario to determine classification, complexity, and risks.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `scenario` | string | yes | Describe the desired holodeck scenario (e.g. "A noir detective mystery in 1940s San Francisco") |
+| `safety_protocols` | boolean | no | Whether safety protocols are enabled (default: true) |
+
+Returns program designation, classification, malfunction probability, environmental parameters, safety assessment, and known risks.
+
+## Prompts (16)
 
 | Prompt | Parameters | Description |
 |--------|------------|-------------|
@@ -243,13 +309,19 @@ Analyzes keywords in the description to compute survival probability, risk facto
 | `kobayashi_maru` | `scenario` | Analyze a no-win scenario and find creative Kirk-style solutions |
 | `live_long_and_prosper` | `session_summary` | Vulcan salute session wrap-up with logical assessment |
 | `qs_judgment` | `code` | Q's omnipotent, theatrically condescending roast of your code |
+| `scotty` | `task`, `actual_estimate?` | Scotty-style engineering time estimate (multiply everything by 4 to look like a miracle worker) |
+| `guinan` | `situation` | Guinan-style wise bartender advice — cryptic but exactly what you needed |
+| `worf` | `situation` | Worf-style security assessment and tactical recommendation |
+| `counselor_troi` | `subject` | Counselor Troi empathic analysis — sense the feelings in your code or situation |
 
-## Resources (2)
+## Resources (4)
 
 | Resource | URI | Description |
 |----------|-----|-------------|
 | Series Reference | `trek://series` | All Trek series (TOS through SNW) with years, seasons, setting, ship, and captain |
 | Glossary | `trek://glossary` | Key Star Trek terminology: warp drive, phaser, transporter, tricorder, etc. |
+| Technobabble | `trek://technobabble` | Particles, fields, phenomena, engineering actions, and systems for generating authentic technobabble |
+| Starship Classes | `trek://starship-classes` | Ship classes by faction (Federation, Klingon, Romulan, Cardassian, Borg, Dominion) with era, role, and notable vessels |
 
 These are static reference resources with original descriptions (not Memory Alpha content), available for context without making API calls.
 
@@ -258,15 +330,25 @@ These are static reference resources with original descriptions (not Memory Alph
 ```
 "Search Memory Alpha for Borg"
 "Tell me about the episode 'The Best of Both Worlds'"
+"List all episodes of TNG Season 3"
 "What are the specs of the USS Defiant?"
+"Look up Jean-Luc Picard's character profile"
 "Give me a random Star Trek trivia question"
 "Check if giving warp technology to a pre-warp civilization violates the Prime Directive"
 "What's my red shirt survival odds for exploring an unknown cave alone?"
 "Look up Ferengi Rule of Acquisition #34"
 "Compare the USS Enterprise-D with the USS Voyager"
+"Simulate a battle between the Enterprise-D and a Borg cube"
+"Build me an away team for a diplomatic mission on a hostile planet"
+"Recommend episodes similar to 'The Inner Light'"
+"Generate a holodeck program for a 1940s detective noir mystery"
+"What's the current stardate?"
+"Convert stardate 41153.7 to a real-world date"
 "What happened in Star Trek on February 14?"
 "Look up Klingon phrases"
 "Explain microservices like Spock would"
+"Give me Scotty's estimate for migrating a database"
+"Assess this situation as Worf would: the build pipeline is failing"
 "Review my code as Q"
 ```
 
@@ -278,12 +360,12 @@ cd memory-alpha-mcp
 npm install
 npm run build   # Compile TypeScript
 npm run dev     # Run with tsx (hot reload)
-npm test        # Run test suite (56 tests)
+npm test        # Run test suite (82 tests)
 ```
 
 ### Testing
 
-The project includes 56 unit tests across 7 test files using [vitest](https://vitest.dev/):
+The project includes 82 unit tests across 11 test files using [vitest](https://vitest.dev/):
 
 | Test File | Coverage |
 |-----------|----------|
@@ -294,6 +376,10 @@ The project includes 56 unit tests across 7 test files using [vitest](https://vi
 | `tests/shuffle.test.ts` | Fisher-Yates shuffle: correctness, element preservation, distribution |
 | `tests/client.test.ts` | Rate limiter: request serialization, interval enforcement |
 | `tests/rules-parsing.test.ts` | Rules of Acquisition regex patterns: all format variants, deduplication, sorting |
+| `tests/stardate.test.ts` | Stardate converter: date-to-stardate, stardate-to-date, TOS/TNG era formulas |
+| `tests/battle-simulator.test.ts` | Battle simulator: combat scoring, narrative generation, ship data parsing |
+| `tests/away-team.test.ts` | Away team builder: role analysis, team selection, mission risk assessment |
+| `tests/holodeck.test.ts` | Holodeck program: designation generation, classification, malfunction probability, safety assessment |
 
 ### MCP Inspector
 
@@ -318,7 +404,7 @@ All Star Trek content is dynamically fetched at runtime from [Memory Alpha's pub
 - Every tool response that includes Memory Alpha content automatically appends an attribution footer via `withAttribution()` in `src/utils/attribution.ts`
 - The footer reads: *"Source: Memory Alpha (CC-BY-SA) | Unofficial fan project - not affiliated with CBS/Paramount"*
 - Error responses that contain no Memory Alpha content do not include the footer
-- The two static resources (`trek://series` and `trek://glossary`) contain original reference descriptions, not Memory Alpha content
+- The four static resources (`trek://series`, `trek://glossary`, `trek://technobabble`, and `trek://starship-classes`) contain original reference descriptions, not Memory Alpha content
 - No copyrighted material is embedded in the source code or package -- all wiki content is fetched live from the API and attributed at the point of display
 
 This approach satisfies CC-BY-SA requirements by providing attribution with every piece of content served, linking to the source, and identifying the license. The project acts as an API client, not a content host.

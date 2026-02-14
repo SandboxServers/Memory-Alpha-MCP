@@ -22,6 +22,13 @@ import { registerWhoSaidItTool } from './tools/who-said-it.js';
 import { registerAlienPhrasesTool } from './tools/alien-phrases.js';
 import { registerPrimeDirectiveTool } from './tools/prime-directive.js';
 import { registerRedShirtTool } from './tools/red-shirt.js';
+import { registerStardateTool } from './tools/stardate.js';
+import { registerBattleSimulatorTool } from './tools/battle-simulator.js';
+import { registerAwayTeamTool } from './tools/away-team.js';
+import { registerEpisodeRecommenderTool } from './tools/episode-recommender.js';
+import { registerCharacterTool } from './tools/character.js';
+import { registerHolodeckTool } from './tools/holodeck.js';
+import { registerListEpisodesTool } from './tools/list-episodes.js';
 
 // Prompts & Resources
 import { registerPrompts } from './prompts/index.js';
@@ -55,6 +62,13 @@ registerWhoSaidItTool(server);
 registerAlienPhrasesTool(server);
 registerPrimeDirectiveTool(server);
 registerRedShirtTool(server);
+registerStardateTool(server);
+registerBattleSimulatorTool(server);
+registerAwayTeamTool(server);
+registerEpisodeRecommenderTool(server);
+registerCharacterTool(server);
+registerHolodeckTool(server);
+registerListEpisodesTool(server);
 
 // Register prompts and resources
 registerPrompts(server);

@@ -190,6 +190,69 @@ export function registerPrompts(server: McpServer): void {
       }],
     })
   );
+
+  server.prompt(
+    'scotty',
+    'Scotty-style engineering time estimate (multiply everything by 4)',
+    {
+      task: z.string().describe('The engineering task to estimate'),
+      actual_estimate: z.string().optional().describe('Your real time estimate (Scotty will inflate it)'),
+    },
+    ({ task, actual_estimate }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Provide a time estimate for the following task as Montgomery "Scotty" Scott would. The key rule: always multiply the real estimate by at least 4, so when you deliver early you look like a miracle worker. Include Scottish expressions, complaints about the laws of physics, references to "my bairns" (the engines), and at least one "I cannae change the laws of physics!" End by reluctantly admitting you might be able to do it faster "if I reroute power from the secondary EPS conduits."\n\n${actual_estimate ? `Real estimate: ${actual_estimate}\n` : ''}Task: ${task}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'guinan',
+    'Guinan-style wise bartender advice — cryptic but exactly what you needed',
+    { situation: z.string().describe('The situation or problem you need wisdom about') },
+    ({ situation }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Respond to the following situation as Guinan from Ten Forward would. Be calm, wise, and slightly mysterious. Serve a metaphorical drink. Share wisdom that seems tangential but turns out to be exactly what was needed. Reference your centuries of experience subtly. Don't give direct answers — guide the person to find their own. Include a knowing smile. End with something that makes them think for hours afterward.\n\nSituation: ${situation}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'worf',
+    'Worf-style security assessment and tactical recommendation',
+    { situation: z.string().describe('The situation to assess tactically') },
+    ({ situation }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Provide a tactical assessment of the following situation as Lieutenant Commander Worf would. Begin with a stern declaration. Recommend the most aggressive course of action first ("I recommend we attack immediately"). Assess honor implications. Reference Klingon warrior principles. Express barely-contained frustration when diplomacy is the obvious answer. Rate the combat readiness of all participants. Include at least one "Perhaps today IS a good day to die." End with a reluctant acknowledgment that the captain's more peaceful approach is "acceptable."\n\nSituation: ${situation}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'counselor_troi',
+    'Counselor Troi empathic analysis — sense the feelings in your code or situation',
+    { subject: z.string().describe('The code, situation, or team dynamic to analyze empathically') },
+    ({ subject }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Analyze the following as Counselor Deanna Troi would, using empathic awareness. Begin with "I sense..." and describe the emotional state of the code/situation/team. Identify hidden tensions, unresolved conflicts, and suppressed feelings. If analyzing code, describe it in emotional terms (frustrated functions, anxious error handling, confident architecture). Recommend therapy (refactoring, team discussions, or actual therapy). Reference your Betazoid heritage. End with compassionate but firm advice.\n\nSubject: ${subject}`,
+        },
+      }],
+    })
+  );
 }
 
 /** Approximate TNG-era stardate from current date. Not canon-accurate - just for fun. */
@@ -198,7 +261,7 @@ function generateStardate(): string {
   const year = now.getFullYear();
   const startOfYear = new Date(year, 0, 1);
   const dayOfYear = Math.floor((now.getTime() - startOfYear.getTime()) / 86400000);
-  const fraction = Math.floor((dayOfYear / 365) * 1000);
+  const fraction = Math.floor((dayOfYear / 365.25) * 1000);
   const tngYear = year - 2323;
   return `${tngYear}${fraction.toString().padStart(3, '0')}.${Math.floor(Math.random() * 10)}`;
 }
