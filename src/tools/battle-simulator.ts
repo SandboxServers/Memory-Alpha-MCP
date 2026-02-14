@@ -3,7 +3,7 @@ import { getArticleWikitext } from '../api/parse.js';
 import { parseWikitext } from '../parser/wikitext.js';
 import { extractSidebarFromWikitext } from '../parser/infobox.js';
 import { withAttribution } from '../utils/attribution.js';
-import { formatKey } from '../utils/text.js';
+import { truncate, formatKey } from '../utils/text.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerBattleSimulatorTool(server: McpServer): void {
@@ -21,8 +21,8 @@ export function registerBattleSimulatorTool(server: McpServer): void {
           fetchShipData(ship2),
         ]);
 
-        const score1 = computeCombatScore(data1.info);
-        const score2 = computeCombatScore(data2.info);
+        const score1 = computeCombatScore(data1);
+        const score2 = computeCombatScore(data2);
         const total = score1 + score2 || 1;
         const pct1 = Math.round((score1 / total) * 100);
         const pct2 = 100 - pct1;
@@ -31,10 +31,21 @@ export function registerBattleSimulatorTool(server: McpServer): void {
 
         const parts: string[] = [
           `## Battle Simulation: ${data1.title} vs ${data2.title}`,
+        ];
+
+        // Add brief ship descriptions
+        if (data1.summary) {
+          parts.push(`**${data1.title}:** ${truncate(data1.summary, 500)}`);
+        }
+        if (data2.summary) {
+          parts.push(`**${data2.title}:** ${truncate(data2.summary, 500)}`);
+        }
+
+        parts.push(
           `### Tactical Assessment`,
           `| Metric | ${data1.title} | ${data2.title} |`,
           `|--------|${'-'.repeat(data1.title.length + 2)}|${'-'.repeat(data2.title.length + 2)}|`,
-        ];
+        );
 
         // Add spec comparison rows
         const allKeys = new Set([
@@ -42,7 +53,7 @@ export function registerBattleSimulatorTool(server: McpServer): void {
           ...Object.keys(data2.info),
         ]);
         const combatKeys = [...allKeys].filter(k =>
-          /armament|weapon|shield|speed|crew|length|mass|deck|torpedo|phaser|disruptor|defense/i.test(k)
+          /armament|weapons?|shields?|speed|crew|length|mass|deck|torpedo|phaser|disruptor|defen[sc]e|complement|propulsion|hull|class|warp|power|energy/i.test(k)
         );
         for (const key of combatKeys) {
           const v1 = data1.info[key] ?? '—';
@@ -77,6 +88,8 @@ export function registerBattleSimulatorTool(server: McpServer): void {
 interface ShipData {
   title: string;
   info: Record<string, string>;
+  fullText: string;
+  summary: string;
 }
 
 async function fetchShipData(name: string): Promise<ShipData> {
@@ -84,12 +97,20 @@ async function fetchShipData(name: string): Promise<ShipData> {
   const parsed = parseWikitext(wikitext, title);
   const sidebar = extractSidebarFromWikitext(wikitext, 'starship') ??
     extractSidebarFromWikitext(wikitext, 'ship');
-  return { title, info: sidebar ?? parsed.infobox ?? {} };
+  return {
+    title,
+    info: sidebar ?? parsed.infobox ?? {},
+    fullText: truncate(parsed.fullText, 5000),
+    summary: parsed.summary,
+  };
 }
 
-function computeCombatScore(info: Record<string, string>): number {
+function computeCombatScore(data: ShipData): number {
   let score = 50; // base
-  const text = Object.values(info).join(' ').toLowerCase();
+  // Score from both infobox values and article text
+  const infoText = Object.values(data.info).join(' ').toLowerCase();
+  const articleText = data.fullText.toLowerCase();
+  const text = infoText + ' ' + articleText;
 
   // Weapons
   const phaserCount = (text.match(/phaser/g) || []).length;

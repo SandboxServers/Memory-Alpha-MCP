@@ -37,7 +37,7 @@ export function parseWikitext(rawWikitext: string, title: string): ParsedArticle
 
   const fullText = cleanSection(doc.text({}));
   const introSection = sections.length > 0 ? sections[0].text : fullText;
-  const summary = truncate(introSection, 1000);
+  const summary = truncate(introSection, 2500);
 
   return {
     title,

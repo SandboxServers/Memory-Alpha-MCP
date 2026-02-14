@@ -28,9 +28,9 @@ export function registerCrewManifestTool(server: McpServer): void {
         const parts: string[] = [`## Crew Manifest: ${title}`];
 
         if (crewSection) {
-          parts.push(truncate(crewSection, 3500));
+          parts.push(truncate(crewSection, 5000));
         } else {
-          parts.push(`No dedicated crew section found. Here's what's available:\n\n${truncate(parsed.summary, 2000)}`);
+          parts.push(`No dedicated crew section found. Here's what's available:\n\n${truncate(parsed.summary, 2500)}`);
           const sectionNames = parsed.sections.map(s => s.title).filter(Boolean);
           if (sectionNames.length > 0) {
             parts.push(`\n**Available sections:** ${sectionNames.join(', ')}`);

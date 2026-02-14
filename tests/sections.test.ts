@@ -14,6 +14,9 @@ He graduated from Starfleet Academy.
 === Command of the Enterprise ===
 In 2364, Picard was given command.
 
+=== Command of the Enterprise-E ===
+After the destruction of the Enterprise-D, Picard took command of the Enterprise-E.
+
 == Personal life ==
 Picard enjoyed Earl Grey tea.`;
 
@@ -33,6 +36,21 @@ describe('extractSection', () => {
   it('returns null for non-existent section', () => {
     const result = extractSection(SAMPLE_WIKITEXT, 'Nonexistent');
     expect(result).toBeNull();
+  });
+
+  it('includes child subsections when extracting a parent section', () => {
+    const result = extractSection(SAMPLE_WIKITEXT, 'Starfleet career');
+    expect(result).not.toBeNull();
+    expect(result).toContain('Starfleet Academy');
+    expect(result).toContain('Command of the Enterprise');
+    expect(result).toContain('2364');
+    expect(result).toContain('Enterprise-E');
+  });
+
+  it('stops at sibling sections and does not bleed into them', () => {
+    const result = extractSection(SAMPLE_WIKITEXT, 'Starfleet career');
+    expect(result).not.toBeNull();
+    expect(result).not.toContain('Earl Grey');
   });
 });
 

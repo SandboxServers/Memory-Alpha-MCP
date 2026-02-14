@@ -35,13 +35,30 @@ export function registerSpeciesTool(server: McpServer): void {
           parts.push(`### Species Profile\n${infoLines}`);
         }
 
-        parts.push(truncate(parsed.summary, 1500));
+        parts.push(truncate(parsed.summary, 2500));
 
         const physiology = extractSection(wikitext, 'Physiology') ?? extractSection(wikitext, 'Biology');
-        if (physiology) parts.push(`### Physiology\n${truncate(physiology, 1000)}`);
+        if (physiology) parts.push(`### Physiology\n${truncate(physiology, 2000)}`);
 
         const culture = extractSection(wikitext, 'Culture') ?? extractSection(wikitext, 'Society');
-        if (culture) parts.push(`### Culture\n${truncate(culture, 1000)}`);
+        if (culture) parts.push(`### Culture\n${truncate(culture, 2000)}`);
+
+        const history = extractSection(wikitext, 'History');
+        if (history) parts.push(`### History\n${truncate(history, 2000)}`);
+
+        const government = extractSection(wikitext, 'Government') ?? extractSection(wikitext, 'Politics');
+        if (government) parts.push(`### Government\n${truncate(government, 2000)}`);
+
+        const military = extractSection(wikitext, 'Military') ?? extractSection(wikitext, 'Military forces');
+        if (military) parts.push(`### Military\n${truncate(military, 2000)}`);
+
+        const technology = extractSection(wikitext, 'Technology');
+        if (technology) parts.push(`### Technology\n${truncate(technology, 2000)}`);
+
+        const relations = extractSection(wikitext, 'Relations') ??
+          extractSection(wikitext, 'Foreign relations') ??
+          extractSection(wikitext, 'Interstellar relations');
+        if (relations) parts.push(`### Relations\n${truncate(relations, 2000)}`);
 
         return { content: [{ type: 'text' as const, text: withAttribution(parts.join('\n\n')) }] };
       } catch (error) {

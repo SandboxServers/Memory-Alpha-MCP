@@ -66,13 +66,24 @@ export function registerEpisodeTool(server: McpServer): void {
         }
 
         const synopsis = extractSection(wikitext, 'Summary') ??
-          extractSection(wikitext, 'Act One') ??
+          extractSection(wikitext, 'Synopsis') ??
+          extractSection(wikitext, 'Plot') ??
           parsed.summary;
-        parts.push(`### Synopsis\n${truncate(synopsis, 2000)}`);
+        parts.push(`### Synopsis\n${truncate(synopsis, 4000)}`);
 
         const quotes = extractSection(wikitext, 'Memorable quotes');
         if (quotes) {
-          parts.push(`### Memorable Quotes\n${truncate(quotes, 1000)}`);
+          parts.push(`### Memorable Quotes\n${truncate(quotes, 1500)}`);
+        }
+
+        const background = extractSection(wikitext, 'Background information');
+        if (background) {
+          parts.push(`### Background Information\n${truncate(background, 2000)}`);
+        }
+
+        const references = extractSection(wikitext, 'References');
+        if (references) {
+          parts.push(`### References\n${truncate(references, 1500)}`);
         }
 
         return { content: [{ type: 'text' as const, text: withAttribution(parts.join('\n\n')) }] };

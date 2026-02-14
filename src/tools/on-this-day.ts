@@ -55,7 +55,7 @@ async function fetchDateArticle(dateStr: string): Promise<{ content: [{ type: 't
       const { wikitext, title } = await getArticleWikitext(attempt);
       const parsed = parseWikitext(wikitext, title);
       const text = withAttribution(
-        `## On This Day in Star Trek: ${title}\n\n${truncate(parsed.fullText, 3500)}`
+        `## On This Day in Star Trek: ${title}\n\n${truncate(parsed.fullText, 5000)}`
       );
       return { content: [{ type: 'text' as const, text }] };
     } catch {

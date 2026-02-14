@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { truncate, stripHtml, cleanWikitext, stripTemplates, formatKey, escapeMdTableCell } from '../src/utils/text.js';
+import { truncate, stripHtml, cleanWikitext, stripTemplates, processTemplates, formatKey, escapeMdTableCell } from '../src/utils/text.js';
 
 describe('truncate', () => {
   it('returns short text unchanged', () => {
@@ -92,6 +92,29 @@ describe('stripTemplates', () => {
 
   it('handles templates with } inside values', () => {
     expect(stripTemplates('A {{tmpl|value with } char}} B')).toBe('A  B');
+  });
+});
+
+describe('processTemplates', () => {
+  it('converts {{USS|Enterprise}} to "USS Enterprise"', () => {
+    expect(processTemplates('The {{USS|Enterprise}} was launched.')).toBe('The USS Enterprise was launched.');
+  });
+
+  it('converts {{USS|Enterprise|NCC-1701}} to "USS Enterprise (NCC-1701)"', () => {
+    expect(processTemplates('The {{USS|Enterprise|NCC-1701}} was a starship.')).toBe('The USS Enterprise (NCC-1701) was a starship.');
+  });
+
+  it('converts {{class|Galaxy}} to "Galaxy-class"', () => {
+    expect(processTemplates('A {{class|Galaxy}} vessel.')).toBe('A Galaxy-class vessel.');
+  });
+
+  it('converts {{quote|text|speaker}} to quoted text with attribution', () => {
+    expect(processTemplates('{{quote|Make it so|Picard}}')).toBe('"Make it so" – Picard');
+  });
+
+  it('converts {{dis|name}} and {{aka|name}} to plain name', () => {
+    expect(processTemplates('{{dis|Enterprise}}')).toBe('Enterprise');
+    expect(processTemplates('{{aka|Number One}}')).toBe('Number One');
   });
 });
 

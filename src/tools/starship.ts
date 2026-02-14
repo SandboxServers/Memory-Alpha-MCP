@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { getArticleWikitext } from '../api/parse.js';
 import { parseWikitext } from '../parser/wikitext.js';
 import { extractSidebarFromWikitext } from '../parser/infobox.js';
+import { extractSection } from '../parser/sections.js';
 import { withAttribution } from '../utils/attribution.js';
 import { truncate, formatKey } from '../utils/text.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -35,7 +36,32 @@ export function registerStarshipTool(server: McpServer): void {
           parts.push(`### Ship Specifications\n${infoLines}`);
         }
 
-        parts.push(truncate(parsed.fullText, 3000));
+        // Try structured section extraction
+        const sectionDefs = [
+          { key: 'History', names: ['History', 'Service history', 'Operational history'] },
+          { key: 'Technical Data', names: ['Technical data', 'Technical specifications', 'Systems'] },
+          { key: 'Crew', names: ['Crew', 'Personnel', 'Crew manifest', 'Known crew'] },
+          { key: 'Armament', names: ['Armament', 'Weapons', 'Tactical systems', 'Defenses'] },
+          { key: 'Legacy', names: ['Legacy', 'Fate', 'Decommissioning'] },
+        ];
+
+        let foundSections = false;
+        for (const def of sectionDefs) {
+          let content: string | null = null;
+          for (const name of def.names) {
+            content = extractSection(wikitext, name);
+            if (content) break;
+          }
+          if (content) {
+            foundSections = true;
+            parts.push(`### ${def.key}\n${truncate(content, 2500)}`);
+          }
+        }
+
+        // Fall back to fullText only if no structured sections found
+        if (!foundSections) {
+          parts.push(truncate(parsed.fullText, 5000));
+        }
 
         return { content: [{ type: 'text' as const, text: withAttribution(parts.join('\n\n')) }] };
       } catch (error) {

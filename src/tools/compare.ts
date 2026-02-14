@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { getArticleWikitext } from '../api/parse.js';
-import { parseWikitext } from '../parser/wikitext.js';
+import { parseWikitext, type ParsedArticle } from '../parser/wikitext.js';
+import { extractSection } from '../parser/sections.js';
 import { withAttribution } from '../utils/attribution.js';
-import { formatKey, escapeMdTableCell } from '../utils/text.js';
+import { truncate, formatKey, escapeMdTableCell } from '../utils/text.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerCompareTool(server: McpServer): void {
@@ -15,10 +16,12 @@ export function registerCompareTool(server: McpServer): void {
     },
     async ({ subject1, subject2 }) => {
       try {
-        const [data1, data2] = await Promise.all([
-          getArticleWikitext(subject1).then(d => parseWikitext(d.wikitext, d.title)),
-          getArticleWikitext(subject2).then(d => parseWikitext(d.wikitext, d.title)),
+        const [raw1, raw2] = await Promise.all([
+          getArticleWikitext(subject1),
+          getArticleWikitext(subject2),
         ]);
+        const data1 = parseWikitext(raw1.wikitext, raw1.title);
+        const data2 = parseWikitext(raw2.wikitext, raw2.title);
 
         const parts: string[] = [`## Comparison: ${data1.title} vs ${data2.title}`];
 
@@ -45,9 +48,15 @@ export function registerCompareTool(server: McpServer): void {
         }
 
         parts.push(
-          `### ${data1.title}\n${data1.summary}`,
-          `### ${data2.title}\n${data2.summary}`
+          `### ${data1.title}\n${truncate(data1.summary, 2500)}`,
+          `### ${data2.title}\n${truncate(data2.summary, 2500)}`
         );
+
+        // Find a matching section for deeper context
+        const contextSection = findMatchingSection(data1, data2, raw1.wikitext, raw2.wikitext);
+        if (contextSection) {
+          parts.push(contextSection);
+        }
 
         return { content: [{ type: 'text' as const, text: withAttribution(parts.join('\n\n')) }] };
       } catch (error) {
@@ -56,4 +65,29 @@ export function registerCompareTool(server: McpServer): void {
       }
     }
   );
+}
+
+function findMatchingSection(
+  data1: ParsedArticle, data2: ParsedArticle,
+  wikitext1: string, wikitext2: string
+): string | null {
+  const contextHeadings = [
+    'History', 'Career', 'Service history', 'Culture',
+    'Physiology', 'Technical data', 'Armament',
+  ];
+
+  const headings1 = new Set(data1.sections.map(s => s.title?.toLowerCase()));
+  const headings2 = new Set(data2.sections.map(s => s.title?.toLowerCase()));
+
+  for (const heading of contextHeadings) {
+    const lower = heading.toLowerCase();
+    if (headings1.has(lower) && headings2.has(lower)) {
+      const s1 = extractSection(wikitext1, heading);
+      const s2 = extractSection(wikitext2, heading);
+      if (s1 && s2) {
+        return `### ${heading} Comparison\n**${data1.title}:** ${truncate(s1, 1500)}\n\n**${data2.title}:** ${truncate(s2, 1500)}`;
+      }
+    }
+  }
+  return null;
 }

@@ -1,4 +1,4 @@
-export function truncate(text: string, maxLength = 4000): string {
+export function truncate(text: string, maxLength = 6000): string {
   if (text.length <= maxLength) return text;
   const truncated = text.slice(0, maxLength);
   const lastPeriod = truncated.lastIndexOf('. ');
@@ -19,8 +19,8 @@ export function stripHtml(text: string): string {
 }
 
 export function cleanWikitext(text: string): string {
-  const stripped = stripTemplates(text);
-  return stripped
+  const processed = processTemplates(text);
+  return processed
     .replace(/\[\[File:[^\]]*\]\]/gi, '')
     .replace(/\[\[Image:[^\]]*\]\]/gi, '')
     .replace(/\[\[Category:[^\]]*\]\]/gi, '')
@@ -29,6 +29,39 @@ export function cleanWikitext(text: string): string {
     .replace(/'{2,3}/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * Process known content-bearing templates before stripping the rest.
+ * Handles USS, quote, dis, aka, class templates — unknown templates are stripped.
+ */
+export function processTemplates(text: string): string {
+  // Process known templates by regex before brace-balanced stripping
+  let result = text;
+
+  // {{USS|Enterprise|NCC-1701}} → "USS Enterprise (NCC-1701)"
+  // {{USS|Enterprise}} → "USS Enterprise"
+  result = result.replace(/\{\{USS\|([^|}]+)\|([^|}]+)\}\}/gi, 'USS $1 ($2)');
+  result = result.replace(/\{\{USS\|([^|}]+)\}\}/gi, 'USS $1');
+
+  // {{class|Galaxy}} → "Galaxy-class"
+  result = result.replace(/\{\{class\|([^|}]+)\}\}/gi, '$1-class');
+
+  // {{dis|name}} → "name"
+  result = result.replace(/\{\{dis\|([^|}]+)(?:\|[^}]*)?\}\}/gi, '$1');
+
+  // {{aka|name}} → "name"
+  result = result.replace(/\{\{aka\|([^|}]+)(?:\|[^}]*)?\}\}/gi, '$1');
+
+  // {{quote|text|speaker}} → '"text" – speaker'
+  // {{quote|text}} → '"text"'
+  result = result.replace(/\{\{quote\|([^|}]+)\|([^|}]+)(?:\|[^}]*)?\}\}/gi, '"$1" – $2');
+  result = result.replace(/\{\{quote\|([^|}]+)\}\}/gi, '"$1"');
+
+  // Strip remaining unknown templates
+  result = stripTemplates(result);
+
+  return result;
 }
 
 /** Strip top-level `{{...}}` templates using brace-balanced matching. */

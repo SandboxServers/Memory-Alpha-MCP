@@ -19,7 +19,7 @@ export function registerTimelineTool(server: McpServer): void {
 
         const parts: string[] = [
           `## Star Trek Timeline: ${title}`,
-          truncate(parsed.fullText, 3500),
+          truncate(parsed.fullText, 5000),
         ];
 
         return { content: [{ type: 'text' as const, text: withAttribution(parts.join('\n\n')) }] };
