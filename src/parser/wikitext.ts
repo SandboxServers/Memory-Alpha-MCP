@@ -20,7 +20,9 @@ export interface ParsedSection {
 }
 
 export function parseWikitext(rawWikitext: string, title: string): ParsedArticle {
-  const doc = wtf(rawWikitext);
+  // Strip interlanguage links before wtf_wikipedia parsing (it converts them to plain text remnants)
+  const strippedWikitext = rawWikitext.replace(/\[\[[a-z]{2,3}:[^\]]*\]\]/g, '');
+  const doc = wtf(strippedWikitext);
 
   const sections: ParsedSection[] = doc.sections().map(s => ({
     title: s.title() || '',
@@ -29,11 +31,26 @@ export function parseWikitext(rawWikitext: string, title: string): ParsedArticle
   }));
 
   const infobox = extractInfobox(doc, rawWikitext);
-  const links = doc.links().filter(Boolean);
+  const links: string[] = doc.links()
+    .map((l: unknown) => {
+      if (typeof l === 'string') return l;
+      if (l && typeof l === 'object' && typeof (l as Record<string, unknown>).page === 'function') {
+        return (l as { page: () => string }).page();
+      }
+      return String(l);
+    })
+    .filter(Boolean);
   const categories = doc.categories().map(c => String(c));
+  // Match actual disambiguation page templates (no params = page marker), NOT hatnotes (with params):
+  // {{disambig}}, {{disambiguation}}, {{dis}} — page markers (no params, followed by }})
+  // {{ep disambiguation|...}} — episode disambiguation pages (always a page marker)
+  // {{disambiguation|desc|target}} — hatnote on regular articles, NOT matched (has params)
+  // {{disambiguate|...}}, {{dis|...}} — hatnotes, NOT matched (has params)
+  // CASE-SENSITIVE for {{dis}} to avoid matching {{DIS}} (Star Trek: Discovery abbreviation)
+  const disambigTemplatePattern = /\{\{[Dd]isambig(uation)?\s*\}\}|\{\{dis\s*\}\}|\{\{[Ee]p\s*disambiguation/;
   const isDisambiguation = title.includes('(disambiguation)') ||
     categories.some(c => c.toLowerCase().includes('disambiguation')) ||
-    rawWikitext.toLowerCase().includes('{{disambig');
+    disambigTemplatePattern.test(rawWikitext);
 
   const fullText = cleanSection(doc.text({}));
   const introSection = sections.length > 0 ? sections[0].text : fullText;

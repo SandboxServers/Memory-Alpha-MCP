@@ -14,3 +14,16 @@ export async function getArticleWikitext(title: string): Promise<{ title: string
     wikitext: data.parse.wikitext?.['*'] ?? '',
   };
 }
+
+interface ExpandTemplatesResponse {
+  expandtemplates: { wikitext: string };
+}
+
+export async function expandTemplates(text: string): Promise<string> {
+  const data = await apiRequest<ExpandTemplatesResponse>({
+    action: 'expandtemplates',
+    text,
+    prop: 'wikitext',
+  });
+  return data.expandtemplates.wikitext;
+}

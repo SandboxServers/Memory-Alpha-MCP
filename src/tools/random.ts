@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { getRandomArticles } from '../api/random.js';
 import { getArticleWikitext } from '../api/parse.js';
-import { parseWikitext } from '../parser/wikitext.js';
 import { withAttribution } from '../utils/attribution.js';
+import { truncate, cleanWikitext, stripHtml } from '../utils/text.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerRandomTool(server: McpServer): void {
@@ -20,8 +20,12 @@ export function registerRandomTool(server: McpServer): void {
         for (const page of randomPages) {
           try {
             const { wikitext, title } = await getArticleWikitext(page.title);
-            const parsed = parseWikitext(wikitext, title);
-            const entry = [`### ${title}`, parsed.summary].join('\n\n');
+            // Extract intro from raw wikitext (before first == heading)
+            // Using our own pipeline avoids wtf_wikipedia dropping italic-wrapped links
+            const intro = wikitext.split(/\n==[^=]/)[0];
+            const cleaned = stripHtml(cleanWikitext(intro)).replace(/\n{3,}/g, '\n\n').trim();
+            const summary = truncate(cleaned, 2500);
+            const entry = [`### ${title}`, summary].join('\n\n');
             articles.push(entry);
           } catch {
             articles.push(`### ${page.title}\n\n*Could not load article.*`);

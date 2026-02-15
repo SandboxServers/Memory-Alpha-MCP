@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import { searchArticles } from '../api/search.js';
 import { getArticleWikitext } from '../api/parse.js';
-import { parseWikitext } from '../parser/wikitext.js';
 import { withAttribution } from '../utils/attribution.js';
-import { truncate } from '../utils/text.js';
+import { truncate, cleanWikitext, stripHtml } from '../utils/text.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const MONTH_NAMES = [
@@ -53,9 +52,11 @@ async function fetchDateArticle(dateStr: string): Promise<{ content: [{ type: 't
   for (const attempt of attempts) {
     try {
       const { wikitext, title } = await getArticleWikitext(attempt);
-      const parsed = parseWikitext(wikitext, title);
+      // Use raw wikitext through our own pipeline — wtf_wikipedia's text()
+      // drops italic-wrapped links, causing missing episode/production titles
+      const cleaned = stripHtml(cleanWikitext(wikitext)).replace(/\n{3,}/g, '\n\n').trim();
       const text = withAttribution(
-        `## On This Day in Star Trek: ${title}\n\n${truncate(parsed.fullText, 5000)}`
+        `## On This Day in Star Trek: ${title}\n\n${truncate(cleaned, 5000)}`
       );
       return { content: [{ type: 'text' as const, text }] };
     } catch {

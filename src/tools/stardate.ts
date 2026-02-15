@@ -18,8 +18,8 @@ export function registerStardateTool(server: McpServer): void {
         if (stardate !== undefined) {
           result = stardateToDate(stardate, era);
         } else {
-          const realDate = date ? new Date(date) : new Date();
-          if (isNaN(realDate.getTime())) {
+          const realDate = date ? parseLocalDate(date) : new Date();
+          if (!realDate || isNaN(realDate.getTime())) {
             return { content: [{ type: 'text' as const, text: `Could not parse date "${date}". Try formats like "2026-02-14" or "March 5 1987".` }] };
           }
           result = dateToStardate(realDate, era);
@@ -32,6 +32,18 @@ export function registerStardateTool(server: McpServer): void {
       }
     }
   );
+}
+
+/** Parse a date string as local time, avoiding UTC timezone shift. */
+function parseLocalDate(input: string): Date | null {
+  // Handle ISO-style YYYY-MM-DD explicitly as local time
+  const isoMatch = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoMatch) {
+    return new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+  }
+  // Fall back to native parser for other formats ("March 5 1987", etc.)
+  const d = new Date(input);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function dateToStardate(date: Date, era: string): string {

@@ -1,6 +1,5 @@
 import { z } from 'zod';
-import { searchArticles } from '../api/search.js';
-import { getCategoryMembers } from '../api/categories.js';
+import { getSeasonEpisodes } from '../api/episodes.js';
 import { withAttribution } from '../utils/attribution.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -31,46 +30,13 @@ export function registerListEpisodesTool(server: McpServer): void {
         const seriesKey = series.toUpperCase();
         const seriesName = SERIES_FULL_NAMES[seriesKey] ?? series;
 
-        // Try category-based lookup first (e.g., "TNG Season 3")
-        const categoryNames = [
-          `${seriesKey} Season ${season}`,
-          `${seriesName} Season ${season} episodes`,
-          `${seriesName} season ${season}`,
-        ];
-
-        let episodes: string[] = [];
-
-        for (const cat of categoryNames) {
-          try {
-            const members = await getCategoryMembers(cat, 50);
-            if (members.length > 0) {
-              episodes = members.map(m => m.title);
-              break;
-            }
-          } catch {
-            continue;
-          }
-        }
-
-        // Fallback: search for the season
-        if (episodes.length === 0) {
-          const query = `${seriesName} season ${season} episodes`;
-          const results = await searchArticles(query, 20);
-          // Filter to likely episode articles (exclude meta-articles)
-          episodes = results
-            .map(r => r.title)
-            .filter(t =>
-              !t.toLowerCase().includes('season') &&
-              !t.toLowerCase().includes('series') &&
-              !t.toLowerCase().includes('list')
-            );
-        }
+        const episodes = await getSeasonEpisodes(seriesKey, season);
 
         if (episodes.length === 0) {
           return { content: [{ type: 'text' as const, text: `No episodes found for ${seriesName} Season ${season}. Check the series abbreviation and season number.` }] };
         }
 
-        const list = episodes.map((ep, i) => `${i + 1}. ${ep}`).join('\n');
+        const list = episodes.map(ep => `${ep.number}. ${ep.title}`).join('\n');
         const text = withAttribution(
           `## ${seriesName} — Season ${season}\n\n${list}\n\n*${episodes.length} episode(s) found. Use \`get_episode\` for details on any episode.*`
         );

@@ -63,6 +63,12 @@ describe('cleanWikitext', () => {
     expect(cleanWikitext('Before {{outer|{{inner}}}} after')).toBe('Before  after');
   });
 
+  it('strips interlanguage links', () => {
+    expect(cleanWikitext('Text [[de:Defiant]] end')).toBe('Text  end');
+    expect(cleanWikitext('[[es:14 febrero]]')).toBe('');
+    expect(cleanWikitext('Content\n[[de:Defiant]]\n[[ja:USSディファイアント]]')).not.toContain('[[');
+  });
+
   it('strips bold/italic markup', () => {
     expect(cleanWikitext("'''bold''' and ''italic''")).toBe('bold and italic');
   });
@@ -115,6 +121,30 @@ describe('processTemplates', () => {
   it('converts {{dis|name}} and {{aka|name}} to plain name', () => {
     expect(processTemplates('{{dis|Enterprise}}')).toBe('Enterprise');
     expect(processTemplates('{{aka|Number One}}')).toBe('Number One');
+  });
+
+  it('converts series episode templates to episode names', () => {
+    expect(processTemplates('Filming on {{TNG|The Inner Light}}.')).toBe('Filming on The Inner Light.');
+    expect(processTemplates('{{DS9|In the Pale Moonlight}} airs.')).toBe('In the Pale Moonlight airs.');
+    expect(processTemplates('{{VOY|Endgame}} premieres.')).toBe('Endgame premieres.');
+    expect(processTemplates('{{ENT|Twilight}} was great.')).toBe('Twilight was great.');
+  });
+
+  it('converts {{e|Episode}} to episode name', () => {
+    expect(processTemplates('Filming on {{e|Encounter at Farpoint}}.')).toBe('Filming on Encounter at Farpoint.');
+  });
+
+  it('converts {{film|N}} to film title', () => {
+    expect(processTemplates('Filming on {{film|8}}.')).toBe('Filming on Star Trek: First Contact.');
+    expect(processTemplates('{{film|2}} was released.')).toBe('Star Trek II: The Wrath of Khan was released.');
+  });
+
+  it('converts {{y|YYYY}} to year string', () => {
+    expect(processTemplates('In {{y|1987}}, TNG premiered.')).toBe('In 1987, TNG premiered.');
+  });
+
+  it('converts {{s|Title}} to title string', () => {
+    expect(processTemplates('{{s|Star Trek: The Next Generation}} aired.')).toBe('Star Trek: The Next Generation aired.');
   });
 });
 

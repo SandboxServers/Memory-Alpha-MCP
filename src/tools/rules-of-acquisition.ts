@@ -31,8 +31,16 @@ async function loadRules(): Promise<Rule[]> {
     let match;
     while ((match = pattern.exec(wikitext)) !== null) {
       const num = parseInt(match[1], 10);
-      const text = match[2].trim().replace(/'+$/, '').replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2');
-      if (!rules.some(r => r.number === num)) {
+      // Skip implausible rule numbers (years, page IDs, etc.)
+      if (num > 500 || num < 1) continue;
+      let text = match[2].trim()
+        .replace(/'+$/, '')
+        .replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2')
+        .replace(/\}\}+/g, '')  // Strip leaked template braces
+        .trim();
+      if (!text || text.length < 3) continue;
+      // Deduplicate by number; also skip if identical text already exists
+      if (!rules.some(r => r.number === num) && !rules.some(r => r.text === text)) {
         rules.push({ number: num, text });
       }
     }

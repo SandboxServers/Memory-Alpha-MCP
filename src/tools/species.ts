@@ -21,6 +21,36 @@ export function registerSpeciesTool(server: McpServer): void {
         const sidebar = extractSidebarFromWikitext(wikitext, 'species');
 
         if (parsed.isDisambiguation) {
+          // Auto-retry with common species suffixes
+          for (const suffix of ['(species)', '(planet)']) {
+            if (species.includes(`(${suffix.slice(1, -1)}`)) continue;
+            try {
+              const retry = await getArticleWikitext(`${species} ${suffix}`);
+              const retryParsed = parseWikitext(retry.wikitext, retry.title);
+              if (!retryParsed.isDisambiguation) {
+                // Restart with the resolved article
+                const retrySidebar = extractSidebarFromWikitext(retry.wikitext, 'species');
+                const retryParts: string[] = [`## ${retry.title}`];
+                const retryInfo = retrySidebar ?? retryParsed.infobox;
+                if (retryInfo) {
+                  const infoLines = Object.entries(retryInfo)
+                    .map(([k, v]) => `- **${formatKey(k)}**: ${v}`)
+                    .join('\n');
+                  retryParts.push(`### Species Profile\n${infoLines}`);
+                }
+                retryParts.push(truncate(retryParsed.summary, 2500));
+                const physiology = extractSection(retry.wikitext, 'Physiology') ?? extractSection(retry.wikitext, 'Biology');
+                if (physiology) retryParts.push(`### Physiology\n${truncate(physiology, 2000)}`);
+                const culture = extractSection(retry.wikitext, 'Culture') ?? extractSection(retry.wikitext, 'Society');
+                if (culture) retryParts.push(`### Culture\n${truncate(culture, 2000)}`);
+                const history = extractSection(retry.wikitext, 'History');
+                if (history) retryParts.push(`### History\n${truncate(history, 2000)}`);
+                return { content: [{ type: 'text' as const, text: withAttribution(retryParts.join('\n\n')) }] };
+              }
+            } catch {
+              continue;
+            }
+          }
           const links = parsed.links.slice(0, 15).map(l => `- ${l}`).join('\n');
           return { content: [{ type: 'text' as const, text: withAttribution(`## ${title}\n\nThis is a disambiguation page. Did you mean one of these?\n\n${links}`) }] };
         }

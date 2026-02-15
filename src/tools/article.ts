@@ -23,6 +23,28 @@ export function registerArticleTool(server: McpServer): void {
         let content: string;
 
         if (parsed.isDisambiguation && !section) {
+          // Auto-retry with "(episode)" suffix before showing disambiguation
+          if (!title.includes('(episode)')) {
+            try {
+              const retry = await getArticleWikitext(`${title} (episode)`);
+              const retryParsed = parseWikitext(retry.wikitext, retry.title);
+              if (!retryParsed.isDisambiguation) {
+                const parts: string[] = [`## ${retry.title}`];
+                if (retryParsed.infobox) {
+                  const infoboxLines = Object.entries(retryParsed.infobox)
+                    .map(([k, v]) => `- **${formatKey(k)}**: ${v}`)
+                    .join('\n');
+                  parts.push(`### Quick Facts\n${infoboxLines}`);
+                }
+                parts.push(summary_only ? retryParsed.summary : truncate(retryParsed.fullText));
+                content = parts.join('\n\n');
+                return { content: [{ type: 'text' as const, text: withAttribution(content) }] };
+              }
+            } catch {
+              // Suffixed title doesn't exist, fall through to disambiguation
+            }
+          }
+
           const links = parsed.links.slice(0, 20).map(l => `- ${l}`).join('\n');
           content = `## ${resolvedTitle}\n\n*This is a disambiguation page.* Here are the available articles:\n\n${links}`;
           return { content: [{ type: 'text' as const, text: withAttribution(content) }] };
