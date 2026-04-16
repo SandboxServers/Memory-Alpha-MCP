@@ -1,0 +1,162 @@
+# Memory Alpha MCP Azure DevOps pipeline
+#
+# This file is intentionally thin: repo-specific triggers, repository resources,
+# and local variable templates stay here in `@self`, while the actual reusable
+# stage/job/step implementation lives in the shared `Azure-Pipeline-YAML` repo.
+#
+# The shared template consumed here is:
+#   Templates/NPM-GitHub-Release/Pipeline/Pipeline.yml@pipelinePatterns
+#
+# That template currently supports these parameters:
+# - `globalVariableTemplatePath`
+# - `buildVariableTemplatePath`
+# - `environmentVariableTemplateDirectory`
+# - `vmImage`
+# - `environments`
+# - `buildStageName`
+# - `releaseStageName`
+# - `preBuildSteps`
+# - `postBuildSteps`
+# - `preReleaseSteps`
+# - `postReleaseSteps`
+#
+# The optional parameters are included below as commented examples so this file
+# doubles as living documentation for future consumers.
+
+# CI trigger configuration.
+# - Run on pushes to `main`.
+# - Also run when semantic-style release tags like `v1.2.3` are pushed.
+trigger:
+  branches:
+    include:
+      - main
+  tags:
+    include:
+      - v*
+
+# Pull request validation configuration.
+# - Validate PRs targeting `main`.
+pr:
+  branches:
+    include:
+      - main
+
+# Queue-time parameters.
+# - `environments` uses Azure DevOps' multi-select `stringList` UI so a single
+#   run can target dev, staging, prod, or any supported combination.
+# - `stringList` is only available at the root pipeline level, so the shared
+#   template accepts it as an `object` parameter on the other side.
+parameters:
+  - name: environments
+    type: stringList
+    displayName: 'Release environments'
+    default:
+      - dev
+    values:
+      - dev
+      - staging
+      - prod
+
+# Self-owned variables.
+# - Only globally shared variables are imported at the root level because the
+#   root pipeline needs `vmImage` for template parameters.
+# - Build and release variables are loaded by the shared jobs themselves.
+variables:
+  - template: pipeline/variables/global.yml
+
+# External repositories consumed by this pipeline.
+# - `pipelinePatterns` points at the shared YAML template catalog.
+# - The GitHub service connection must be authorized in Azure DevOps.
+resources:
+  repositories:
+    - repository: pipelinePatterns
+      type: github
+      endpoint: github.com_SandboxServers
+      name: SandboxServers/Azure-Pipeline-YAML
+      ref: refs/heads/main
+
+# Extend the shared NPM GitHub release pipeline.
+# - Only the actively used overrides are enabled.
+# - All other supported parameters are shown below as commented examples so the
+#   pipeline contract is obvious without opening the shared template.
+# - These hook parameters accept normal inline steps and step-template calls.
+# - Prefer shared `Templates/Standalone/Steps/...@pipelinePatterns` templates
+#   where possible so teams reuse common behavior instead of inlining scripts.
+extends:
+  template: Templates/NPM-GitHub-Release/Pipeline/Pipeline.yml@pipelinePatterns
+  parameters:
+    # Repo-local variable layers.
+    # - Global variables are loaded in both build and release jobs.
+    # - Build variables are only loaded in the build job.
+    # - Environment variables are loaded once per selected release environment
+    #   from files like `/pipeline/variables/dev.yml` or `/pipeline/variables/prod.yml`.
+    globalVariableTemplatePath: '/pipeline/variables/global.yml'
+    buildVariableTemplatePath: '/pipeline/variables/build.yml'
+    environmentVariableTemplateDirectory: '/pipeline/variables'
+
+    # Agent image used by both build and release jobs.
+    # The value comes from `pipeline/variables/global.yml`.
+    vmImage: '$(vmImage)'
+
+    # Selected release environments from the queue-time multi-select control.
+    environments: ${{ parameters.environments }}
+
+    # Optional: rename the build stage in the Azure DevOps UI.
+    # buildStageName: 'Build'
+
+    # Optional: rename the release stage in the Azure DevOps UI.
+    # releaseStageName: 'Release'
+
+    # Optional: inject additional steps before Node install / cache restore /
+    # npm install / build / test / pack logic. Useful for setup, linting, or
+    # custom validation that should run before the packaged artifact is created.
+    # These entries can be full step-template calls from the shared library.
+    # preBuildSteps:
+    #   - template: Templates/Standalone/Steps/Npm/Run.yml@pipelinePatterns
+    #     parameters:
+    #       displayName: 'Lint package'
+    #       workingDirectory: '$(Build.SourcesDirectory)/$(npmWorkingDirectory)'
+    #       taskCommand: 'custom'
+    #       customCommand: 'run lint'
+
+    # Optional: inject additional steps after the packaged artifact is published.
+    # Useful for extra reporting, artifact inspection, or pipeline telemetry.
+    # This is another good place to call a shared step template instead of
+    # writing ad hoc scripts in every consumer pipeline.
+    # postBuildSteps:
+    #   - template: Templates/Standalone/Steps/GitHub/PreviewRelease.yml@pipelinePatterns
+    #     parameters:
+    #       displayName: 'Preview packaged output'
+    #       repositoryName: '$(githubRepositoryName)'
+    #       title: '$(ReleaseTitle)'
+    #       tag: '$(ReleaseTag)'
+    #       target: '$(Build.SourceVersion)'
+    #       assets: '$(Build.ArtifactStagingDirectory)/$(packageArtifactName)/$(packageOutputGlob)'
+    #       releaseNotesFilePath: '$(Build.ArtifactStagingDirectory)/$(packageArtifactName)/$(releaseNotesFileName)'
+
+    # Optional: inject additional steps before release preview / GitHub release
+    # creation. Useful for final approvals, release-note generation, or custom
+    # policy checks that should happen after artifact download.
+    # Shared step templates work here too.
+    # preReleaseSteps:
+    #   - template: Templates/Standalone/Steps/Npm/Run.yml@pipelinePatterns
+    #     parameters:
+    #       displayName: 'Audit package before release'
+    #       workingDirectory: '$(Build.SourcesDirectory)/$(npmWorkingDirectory)'
+    #       taskCommand: 'custom'
+    #       customCommand: 'audit --audit-level=high'
+
+    # Optional: inject additional steps after the release preview / publish step.
+    # Useful for notifications, audit logging, or external deployment triggers.
+    # If a shared step does not exist yet, that is usually a good signal to add
+    # it to the shared step library instead of duplicating scripts across repos.
+    # postReleaseSteps:
+    #   - template: Templates/Standalone/Steps/GitHub/PreviewRelease.yml@pipelinePatterns
+    #     parameters:
+    #       displayName: 'Post-release summary'
+    #       repositoryName: '$(githubRepositoryName)'
+    #       title: '$(ReleaseTitle)'
+    #       tag: '$(ReleaseTag)'
+    #       target: '$(Build.SourceVersion)'
+    #       assets: '$(Pipeline.Workspace)/$(packageArtifactName)/$(packageOutputGlob)'
+    #       releaseNotesFilePath: '$(Pipeline.Workspace)/$(packageArtifactName)/$(releaseNotesFileName)'

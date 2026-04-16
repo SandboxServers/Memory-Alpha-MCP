@@ -1,0 +1,65 @@
+# Build-stage pipeline variables for the shared NPM GitHub release template.
+#
+# Purpose:
+# - values in this file are loaded only by the build/package job
+# - keep install, build, test, pack, and cache behavior here
+# - release-specific behavior belongs in `global.yml` or `<environment>.yml`
+#
+# Notes:
+# - the shared template prefers built-in Azure DevOps task modes first
+# - for dependency restore, use `ci` or `install` when possible
+# - fall back to `custom` only when the `Npm@1` task cannot express what you need
+
+variables:
+  # Relative working directory for all npm commands.
+  # Use `.` for a single-package repo rooted at the repository root.
+  - name: npmWorkingDirectory
+    value: .
+
+  # Dependency restore mode.
+  # Supported values in the shared template:
+  # - `ci`
+  # - `install`
+  # - `custom`
+  - name: npmInstallCommand
+    value: ci
+
+  # Custom dependency restore command used only when `npmInstallCommand=custom`.
+  # Leave blank when using the built-in `ci` or `install` modes.
+  - name: npmInstallCustomCommand
+    value: ''
+
+  # Build command passed through the shared `Npm@1` wrapper as a custom command.
+  # This should usually be the exact npm command tail, for example `run build`.
+  - name: npmBuildCommand
+    value: run build
+
+  # Test command passed through the shared `Npm@1` wrapper as a custom command.
+  # Set this to an empty string only if the repo intentionally skips tests here.
+  - name: npmTestCommand
+    value: test
+
+  # Extra arguments forwarded to `npm pack`.
+  # Leave blank for the standard package flow.
+  - name: npmPackArgs
+    value: ''
+
+  # Pack modifiers used by the shared custom pack step.
+  # Useful for previewing package contents or avoiding lifecycle scripts.
+  - name: npmPackDryRun
+    value: 'false'
+  - name: npmPackIgnoreScripts
+    value: 'false'
+
+  # Cache toggle for the generic `Cache@2` wrapper used by the build job.
+  # When enabled, the build job restores the npm cache before install.
+  - name: enableNpmCache
+    value: 'true'
+
+  # Cache location and key file used by the shared cache step.
+  # `npmCacheKeyFile` should point at the lockfile that should invalidate cache
+  # entries when dependencies change.
+  - name: npmCacheDirectory
+    value: $(Pipeline.Workspace)/.npm
+  - name: npmCacheKeyFile
+    value: package-lock.json

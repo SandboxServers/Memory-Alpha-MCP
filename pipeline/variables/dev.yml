@@ -1,0 +1,30 @@
+# Development release variables for the shared NPM GitHub release template.
+#
+# Purpose:
+# - this file overrides global release defaults for the `dev` environment only
+# - use environment files to describe how lower/higher environments should tag
+#   and publish releases differently
+# - the shared release stage loads this file dynamically when `dev` is selected
+
+variables:
+  # Canonical environment name. This is primarily descriptive, but it also helps
+  # downstream steps and logs reflect which environment file was applied.
+  - name: environmentName
+    value: dev
+
+  # Dev releases should be visibly distinct in the GitHub UI.
+  - name: releaseTitleFormat
+    value: '{0} {1} (Dev)'
+
+  # Dev releases use an environment-specific suffix so they do not collide with
+  # production tags or production-style release numbering.
+  - name: releaseTagFormat
+    value: 'v{1}-dev'
+
+  # Dev releases stay in draft/prerelease mode and should never become latest.
+  - name: gitHubReleaseDraft
+    value: 'true'
+  - name: gitHubReleasePreRelease
+    value: 'true'
+  - name: gitHubReleaseMakeLatest
+    value: 'false'

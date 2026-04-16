@@ -1,0 +1,121 @@
+# Global pipeline variables for the shared NPM GitHub release template.
+#
+# Purpose:
+# - values in this file are loaded by both the build job and the release job
+# - keep only cross-cutting settings here that should apply in every environment
+# - environment-specific release behavior belongs in `dev.yml`, `prod.yml`, or
+#   another `<environment>.yml` file added later
+#
+# Ownership:
+# - this file is owned by the application repo
+# - the shared template reads it through `@self`
+# - do not move repo-specific service connections, release defaults, or package
+#   naming into the shared template repo
+
+variables:
+  # Agent image used by the shared build and release jobs.
+  # Keep this in the root/global layer because the root pipeline passes it into
+  # the shared template before any build- or environment-specific files load.
+  - name: vmImage
+    value: ubuntu-latest
+
+  # Node.js runtime used for install/build/test/pack steps.
+  # This feeds the shared `UseNode@1` wrapper.
+  - name: nodeVersion
+    value: 20.x
+
+  # Relative path to the package manifest used to resolve package metadata.
+  # Most single-package repos can leave this as `package.json`.
+  - name: packageJsonPath
+    value: package.json
+
+  # Release title format used when generating GitHub release metadata.
+  # Tokens:
+  # - `{0}` = package name
+  # - `{1}` = package version
+  # Environment files can override this when they need a suffix such as `(Dev)`.
+  - name: releaseTitleFormat
+    value: '{0} {1}'
+
+  # Release tag format used when generating Git tags or user-specified tags for
+  # GitHub releases.
+  # Tokens:
+  # - `{0}` = package name
+  # - `{1}` = package version
+  - name: releaseTagFormat
+    value: 'v{1}'
+
+  # Safety gate that limits release creation to tag-triggered runs.
+  # Leave this as `'true'` when releases should only happen from pushed tags.
+  - name: releaseFromTagOnly
+    value: 'true'
+
+  # Regex used by the release task when `tagSource` is `gitTag`.
+  # This should match the tag format your repo actually publishes.
+  - name: gitTagPattern
+    value: ^v.*
+
+  # Default GitHub release mode flags.
+  # Environment files can override these for pre-release channels.
+  - name: gitHubReleaseDraft
+    value: 'false'
+  - name: gitHubReleasePreRelease
+    value: 'false'
+
+  # Demo/test toggle.
+  # When `'true'`, the pipeline prints a release preview instead of creating a
+  # real GitHub release.
+  - name: gitHubReleaseDryRun
+    value: 'false'
+
+  # Controls whether GitHub should mark the created release as the latest one.
+  # Higher environments usually keep this `'true'`; lower environments often
+  # override it to `'false'`.
+  - name: gitHubReleaseMakeLatest
+    value: 'true'
+
+  # Changelog generation settings for `GitHubRelease@1`.
+  # These control whether the task builds release notes from commits or issues,
+  # and what it compares the current release against.
+  - name: gitHubReleaseAddChangeLog
+    value: 'true'
+  - name: gitHubReleaseChangeLogCompareTo
+    value: lastFullRelease
+  - name: gitHubReleaseChangeLogCompareToReleaseTag
+    value: ''
+  - name: gitHubReleaseChangeLogType
+    value: commitBased
+  - name: gitHubReleaseChangeLogLabels
+    value: ''
+
+  # Artifact naming used between the build and release stages.
+  # The build job publishes a pipeline artifact with this name, and the release
+  # job downloads it again later.
+  - name: packageArtifactName
+    value: npm-package
+
+  # Glob used by the GitHub release task when uploading packaged output.
+  # For `npm pack`, the distributable is normally a single `.tgz` file.
+  - name: packageOutputGlob
+    value: '*.tgz'
+
+  # Supporting file names written into the packaged artifact directory.
+  # The shared template writes these during the pack step and consumes them
+  # during the release step.
+  - name: releaseNotesFileName
+    value: release-notes.md
+  - name: packageManifestFileName
+    value: package-manifest.json
+
+  # Controls whether the generated package manifest JSON is included alongside
+  # the packed tarball artifact.
+  - name: includePackageManifest
+    value: 'true'
+
+  # GitHub service connection and repository name used by `GitHubRelease@1`.
+  # Keep the service connection repo-local so each consumer can point at its own
+  # authorized connection without changing the shared template.
+  - name: githubServiceConnection
+    value: github.com_SandboxServers
+  - name: githubRepositoryName
+    value: $(Build.Repository.Name)

@@ -1,0 +1,28 @@
+# Production release variables for the shared NPM GitHub release template.
+#
+# Purpose:
+# - this file overrides global release defaults for the `prod` environment only
+# - keep production behavior explicit even when it matches global defaults, so
+#   the environment contract is obvious to future readers
+
+variables:
+  # Canonical environment name used by release-stage logging and environment fan-out.
+  - name: environmentName
+    value: prod
+
+  # Production releases use the canonical package name/version title.
+  - name: releaseTitleFormat
+    value: '{0} {1}'
+
+  # Production releases use the canonical version tag with no environment suffix.
+  - name: releaseTagFormat
+    value: 'v{1}'
+
+  # Production releases are real, non-draft, non-prerelease releases and should
+  # be eligible to become the latest release on GitHub.
+  - name: gitHubReleaseDraft
+    value: 'false'
+  - name: gitHubReleasePreRelease
+    value: 'false'
+  - name: gitHubReleaseMakeLatest
+    value: 'true'

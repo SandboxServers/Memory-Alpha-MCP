@@ -11,7 +11,7 @@ An MCP (Model Context Protocol) server that brings Star Trek knowledge from [Mem
 Add to your Claude Desktop config (`claude_desktop_config.json`):
 
 ```json
-{
+{ 
   "mcpServers": {
     "memory-alpha": {
       "command": "npx",
@@ -360,12 +360,12 @@ cd memory-alpha-mcp
 npm install
 npm run build   # Compile TypeScript
 npm run dev     # Run with tsx (hot reload)
-npm test        # Run test suite (82 tests)
+npm test        # Run test suite (117 tests)
 ```
 
 ### Testing
 
-The project includes 82 unit tests across 11 test files using [vitest](https://vitest.dev/):
+The project includes 117 unit tests across 13 test files using [vitest](https://vitest.dev/):
 
 | Test File | Coverage |
 |-----------|----------|
@@ -375,11 +375,13 @@ The project includes 82 unit tests across 11 test files using [vitest](https://v
 | `tests/sections.test.ts` | Section extraction, intro extraction, heading listing |
 | `tests/shuffle.test.ts` | Fisher-Yates shuffle: correctness, element preservation, distribution |
 | `tests/client.test.ts` | Rate limiter: request serialization, interval enforcement |
+| `tests/episodes.test.ts` | Season table parsing: episode extraction, title cleanup, deduplication, padding, and non-episode link filtering |
 | `tests/rules-parsing.test.ts` | Rules of Acquisition regex patterns: all format variants, deduplication, sorting |
 | `tests/stardate.test.ts` | Stardate converter: date-to-stardate, stardate-to-date, TOS/TNG era formulas |
 | `tests/battle-simulator.test.ts` | Battle simulator: combat scoring, narrative generation, ship data parsing |
 | `tests/away-team.test.ts` | Away team builder: role analysis, team selection, mission risk assessment |
 | `tests/holodeck.test.ts` | Holodeck program: designation generation, classification, malfunction probability, safety assessment |
+| `tests/wikitext-parser.test.ts` | Wikitext parser: disambiguation detection, false-positive protection, and normalized link extraction |
 
 ### MCP Inspector
 
