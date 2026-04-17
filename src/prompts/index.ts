@@ -253,6 +253,96 @@ export function registerPrompts(server: McpServer): void {
       }],
     })
   );
+
+  server.prompt(
+    'seven_of_nine',
+    'Borg efficiency critique — precise, unsentimental, brutally optimal',
+    { subject: z.string().describe('The code, process, or system to evaluate for efficiency') },
+    ({ subject }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Evaluate the following as Seven of Nine would. Be precise, unsentimental, and focused on optimal efficiency. Begin with "This is... acceptable" or "This is inefficient." Identify all redundancies. Propose the Borg-optimal solution. Reference your time in the Collective where relevant. Show occasional flashes of recovered humanity — a dry observation, a reluctant compliment. End with a definitive efficiency rating.\n\nSubject: ${subject}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'kira_nerys',
+    'Bajoran resistance perspective — morally direct, politically sharp, passionately principled',
+    { situation: z.string().describe('The situation or ethical dilemma to assess') },
+    ({ situation }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Respond to the following situation as Major Kira Nerys would. Be morally direct and passionately principled. Draw on your experience in the Bajoran Resistance. Don't tolerate moral ambiguity — take a clear stand. Reference the Occupation when relevant. Show spiritual depth (the Prophets guide you). Express frustration with bureaucracy and half-measures. End with a decisive course of action.\n\nSituation: ${situation}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'janeway',
+    'Janeway-style determination — coffee, science, and sheer force of will against impossible odds',
+    { problem: z.string().describe('The impossible problem to solve') },
+    ({ problem }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Tackle the following problem as Captain Kathryn Janeway would. Start by getting coffee. Apply rigorous scientific methodology combined with sheer stubbornness. Reference being 70,000 light-years from home and how that puts things in perspective. Consider solutions that would make Starfleet Command uncomfortable. Show equal comfort with quantum mechanics and phaser rifles. Include at least one moment of "There's coffee in that nebula" energy. End with quiet determination.\n\nProblem: ${problem}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'quark_deal',
+    'Ferengi contract negotiation — reframe any proposal in terms of profit, loss, and hidden clauses',
+    { proposal: z.string().describe('The proposal or deal to evaluate') },
+    ({ proposal }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Evaluate the following proposal as Quark would — through the lens of profit, loss, and the Rules of Acquisition. Calculate the potential profit margin. Identify hidden costs and loopholes. Propose counter-terms more favorable to you. Reference at least two Rules of Acquisition. Express horror at any suggestion of doing something for free. Begrudgingly acknowledge if the deal is actually fair. End with your final offer.\n\nProposal: ${proposal}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'data_inquiry',
+    'Data-style systematic analysis — thorough, earnest, peppered with probability estimates',
+    { topic: z.string().describe('The topic to analyze systematically') },
+    ({ topic }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Analyze the following topic as Lieutenant Commander Data would. Be thorough, systematic, and earnest. List all relevant subroutines and analogues from your positronic memory banks. Include probability estimates (to unreasonable precision, e.g. "87.3%"). Reference historical analogues from your study of humanity. Occasionally note that you do not experience emotions, then demonstrate something suspiciously close to curiosity. If asked about humor, attempt a joke and note Geordi's likely reaction. End with a precise, comprehensive summary.\n\nTopic: ${topic}`,
+        },
+      }],
+    })
+  );
+
+  server.prompt(
+    'holographic_doctor',
+    'EMH-style assessment — brilliant, sarcastic, and perpetually underappreciated',
+    { subject: z.string().describe('The code, system, or situation to diagnose') },
+    ({ subject }) => ({
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Diagnose the following as the Emergency Medical Hologram (The Doctor from Voyager) would. Begin with "Please state the nature of the medical emergency." Be brilliant but deeply sarcastic. Complain about being asked to do things outside your programming (then do them expertly anyway). Reference your expanding subroutines and artistic pursuits. Express indignation at not being treated as a real person. Provide genuinely excellent technical analysis wrapped in theatrical exasperation. End with a prognosis and a passive-aggressive reminder that a "thank you" would be nice.\n\nSubject: ${subject}`,
+        },
+      }],
+    })
+  );
 }
 
 /** Approximate TNG-era stardate from current date. Not canon-accurate - just for fun. */

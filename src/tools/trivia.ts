@@ -38,8 +38,19 @@ export function registerTriviaTool(server: McpServer): void {
 
         const subject = articles[0];
         const decoys = articles.slice(1).map(a => a.title);
+        // Pad decoys with plausible Trek-themed alternatives instead of generic placeholders
+        const FALLBACK_DECOYS = [
+          'USS Yamato', 'Bajoran wormhole', 'Tholian Assembly', 'Dilithium recrystallization',
+          'Plasma manifold', 'Khitomer Accords', 'Denevan neural parasite', 'Iconian gateway',
+          'Risa', 'Daystrom Institute', 'Cardassian Union', 'Tarkalean tea',
+        ];
+        let fallbackIdx = 0;
         while (decoys.length < 3) {
-          decoys.push(`Unknown ${['Alpha', 'Beta', 'Gamma', 'Delta'][decoys.length]} entry`);
+          const candidate = FALLBACK_DECOYS[fallbackIdx % FALLBACK_DECOYS.length];
+          fallbackIdx++;
+          if (candidate !== subject.title && !decoys.includes(candidate)) {
+            decoys.push(candidate);
+          }
         }
 
         const hint = difficulty === 'easy' ? `\n\n*Hint: ${subject.summary.slice(0, 100)}...*` : '';

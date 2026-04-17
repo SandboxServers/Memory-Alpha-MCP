@@ -53,9 +53,10 @@ export async function apiRequest<T>(params: Record<string, string>): Promise<T> 
       clearTimeout(timeout);
 
       if (!response.ok) {
-        if (response.status >= 500 && attempt < MAX_RETRIES) {
-          log(`Server error ${response.status}, retrying...`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        if ((response.status >= 500 || response.status === 429) && attempt < MAX_RETRIES) {
+          const backoff = response.status === 429 ? 2000 * (attempt + 1) : 1000 * (attempt + 1);
+          log(`${response.status === 429 ? 'Rate limited' : 'Server error'} ${response.status}, retrying in ${backoff}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoff));
           continue;
         }
         throw new Error(`API returned ${response.status}: ${response.statusText}`);

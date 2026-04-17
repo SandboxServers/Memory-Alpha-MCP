@@ -9,7 +9,7 @@ interface Rule {
   text: string;
 }
 
-const rulesCache = new TTLCache<Rule[]>(300_000, 1); // 5 min TTL, 1 entry
+const rulesCache = new TTLCache<Rule[]>(86_400_000, 1); // 24 hr TTL, 1 entry
 
 async function loadRules(): Promise<Rule[]> {
   const cached = rulesCache.get('rules');

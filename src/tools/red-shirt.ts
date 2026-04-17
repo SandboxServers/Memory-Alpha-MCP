@@ -48,42 +48,46 @@ interface RiskResult {
 
 function analyzeRisk(description: string): RiskResult {
   const lower = description.toLowerCase();
-  let survival = 70;
+  let positiveRisk = 0; // total positive risk modifiers (capped)
+  let negativeRisk = 0; // total risk reduction (capped)
   const factors: string[] = [];
 
   if (lower.includes('unknown') || lower.includes('uncharted') || lower.includes('unexplored')) {
-    survival -= 20; factors.push('Unknown territory: +20% risk');
+    positiveRisk += 20; factors.push('Unknown territory: +20% risk');
   }
   if (lower.includes('energy') || lower.includes('radiation') || lower.includes('anomaly')) {
-    survival -= 15; factors.push('Anomalous energy readings: +15% risk');
+    positiveRisk += 15; factors.push('Anomalous energy readings: +15% risk');
   }
   if (lower.includes('planet') || lower.includes('surface')) {
-    survival -= 10; factors.push('Planetary surface mission: +10% risk');
+    positiveRisk += 10; factors.push('Planetary surface mission: +10% risk');
   }
   if (lower.includes('hostile') || lower.includes('enemy') || lower.includes('klingon') || lower.includes('romulan')) {
-    survival -= 25; factors.push('Hostile presence: +25% risk');
+    positiveRisk += 25; factors.push('Hostile presence: +25% risk');
   }
   if (lower.includes('captain') || lower.includes('commander')) {
-    survival += 15; factors.push('Senior officer present: -15% risk (they have plot armor)');
+    negativeRisk += 15; factors.push('Senior officer present: -15% risk (they have plot armor)');
   }
   if (lower.includes('alone') || lower.includes('solo') || lower.includes('separated')) {
-    survival -= 30; factors.push('Alone/separated from team: +30% risk (CRITICAL)');
+    positiveRisk += 30; factors.push('Alone/separated from team: +30% risk (CRITICAL)');
   }
   if (lower.includes('cave') || lower.includes('tunnel')) {
-    survival -= 15; factors.push('Underground location: +15% risk');
+    positiveRisk += 15; factors.push('Underground location: +15% risk');
   }
   if (lower.includes('negotiate') || lower.includes('diplomatic')) {
-    survival += 10; factors.push('Diplomatic mission: -10% risk');
+    negativeRisk += 10; factors.push('Diplomatic mission: -10% risk');
   }
   if (lower.includes('engineering') || lower.includes('repair')) {
-    survival -= 5; factors.push('Engineering task: +5% risk (plasma conduits are unpredictable)');
+    positiveRisk += 5; factors.push('Engineering task: +5% risk (plasma conduits are unpredictable)');
   }
 
   if (factors.length === 0) {
     factors.push('Standard away mission parameters: baseline risk');
   }
 
-  survival = Math.max(5, Math.min(95, survival));
+  // Cap contributions to prevent extreme stacking
+  const cappedPositive = Math.min(positiveRisk, 55);
+  const cappedNegative = Math.min(negativeRisk, 20);
+  const survival = Math.max(5, Math.min(95, 70 - cappedPositive + cappedNegative));
 
   const rating = survival >= 80 ? 'GREEN (Relatively Safe)'
     : survival >= 60 ? 'YELLOW (Moderate Risk)'

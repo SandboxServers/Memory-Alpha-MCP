@@ -10,16 +10,47 @@ interface CrewMember {
 }
 
 const CREW_DATABASE: CrewMember[] = [
+  // TNG
   { name: 'Commander Riker', role: 'Away Team Leader', specialty: 'Tactics, diplomacy, improvisation', survivalBonus: 'Plot armor (first officer)' },
   { name: 'Lt. Commander Data', role: 'Science/Operations', specialty: 'Analysis, computation, superhuman strength', survivalBonus: 'Android — immune to most hazards' },
   { name: 'Lt. Commander Worf', role: 'Security Chief', specialty: 'Combat, threat assessment, Klingon intimidation', survivalBonus: 'Klingon redundant organs' },
   { name: 'Lt. Commander La Forge', role: 'Chief Engineer', specialty: 'Engineering, repairs, technical improvisation', survivalBonus: 'VISOR detects anomalies others miss' },
   { name: 'Dr. Crusher', role: 'Chief Medical Officer', specialty: 'Medicine, xenobiology, field triage', survivalBonus: 'Can keep the team alive (literally)' },
   { name: 'Counselor Troi', role: 'Ship\'s Counselor', specialty: 'Empathy, sensing deception, psychology', survivalBonus: 'Detects hostile intent before contact' },
+  // DS9
+  { name: 'Lt. Commander Jadzia Dax', role: 'Science Officer', specialty: '7 lifetimes of experience, diplomacy, combat', survivalBonus: 'Trill symbiont wisdom' },
+  { name: 'Constable Odo', role: 'Security Chief', specialty: 'Shapeshifting, investigation, infiltration', survivalBonus: 'Changeling physiology — immune to physical harm' },
+  { name: 'Major Kira Nerys', role: 'First Officer', specialty: 'Guerrilla tactics, Bajoran resistance experience', survivalBonus: 'Survived the Occupation — survival is her specialty' },
+  { name: 'Dr. Bashir', role: 'Chief Medical Officer', specialty: 'Medicine, genetic enhancement, field surgery', survivalBonus: 'Genetically enhanced reflexes and intellect' },
+  { name: 'Chief O\'Brien', role: 'Operations/Engineer', specialty: 'Repairs under fire, transporter expertise', survivalBonus: 'Survives everything (canonically unlucky but immortal)' },
+  // VOY
   { name: 'Lt. Commander Tuvok', role: 'Security/Tactical', specialty: 'Logic, Vulcan nerve pinch, infiltration', survivalBonus: 'Vulcan physiology + mental discipline' },
   { name: 'Seven of Nine', role: 'Science Specialist', specialty: 'Borg knowledge, nanoprobes, adaptation', survivalBonus: 'Borg implants + encyclopedic knowledge' },
-  { name: 'Chief O\'Brien', role: 'Operations/Engineer', specialty: 'Repairs under fire, transporter expertise', survivalBonus: 'Survives everything (canonically unlucky but immortal)' },
-  { name: 'Lt. Commander Jadzia Dax', role: 'Science Officer', specialty: '7 lifetimes of experience, diplomacy, combat', survivalBonus: 'Trill symbiont wisdom' },
+  { name: 'Lt. B\'Elanna Torres', role: 'Chief Engineer', specialty: 'Engineering genius, Klingon ferocity, improvisation', survivalBonus: 'Half-Klingon toughness + engineering brilliance' },
+  { name: 'The Doctor (EMH)', role: 'Chief Medical Officer', specialty: 'Medicine, surgery, encyclopedic knowledge', survivalBonus: 'Holographic — immune to physical hazards (with mobile emitter)' },
+  { name: 'Lt. Tom Paris', role: 'Pilot/Field Medic', specialty: 'Piloting, field medicine, resourcefulness', survivalBonus: 'Trained as field medic + unorthodox problem solving' },
+  // TOS
+  { name: 'Commander Spock', role: 'Science Officer', specialty: 'Logic, Vulcan nerve pinch, scientific analysis', survivalBonus: 'Vulcan physiology + telepathy' },
+  { name: 'Dr. McCoy', role: 'Chief Medical Officer', specialty: 'Medicine, xenobiology, moral compass', survivalBonus: 'Too ornery to die' },
+  { name: 'Lt. Commander Scott', role: 'Chief Engineer', specialty: 'Engineering miracles, improvisation under pressure', survivalBonus: 'Can fix anything with a hyperspanner and willpower' },
+  { name: 'Lt. Uhura', role: 'Communications Officer', specialty: 'Linguistics, communications, cryptography', survivalBonus: 'Can communicate with almost anyone' },
+  // ENT
+  { name: 'Sub-Commander T\'Pol', role: 'Science Officer', specialty: 'Vulcan logic, sensor analysis, combat training', survivalBonus: 'Vulcan physiology + Vulcan Science Directorate training' },
+  { name: 'Commander Tucker', role: 'Chief Engineer', specialty: 'Engineering, warp drive expertise, improvisation', survivalBonus: 'Florida-raised stubbornness' },
+  // SNW
+  { name: 'Commander Una Chin-Riley', role: 'First Officer', specialty: 'Tactics, Illyrian physiology, command', survivalBonus: 'Illyrian genetic enhancements' },
+  { name: 'Lt. La\'an Noonien-Singh', role: 'Security Chief', specialty: 'Combat, threat assessment, tactical planning', survivalBonus: 'Augment heritage + security training' },
+  { name: 'Nurse Chapel', role: 'Medical/Science', specialty: 'Xenobiology, archaeology, field medicine', survivalBonus: 'Resourceful and fearless' },
+  // DIS
+  { name: 'Commander Burnham', role: 'Science Specialist', specialty: 'Xenoanthropology, Vulcan training, combat', survivalBonus: 'Vulcan-trained logic + human intuition' },
+  { name: 'Lt. Commander Stamets', role: 'Science Officer', specialty: 'Astromycology, spore drive navigation', survivalBonus: 'Tardigrade DNA — uniquely connected to the mycelial network' },
+  // PIC
+  { name: 'Captain Liam Shaw', role: 'Commanding Officer', specialty: 'Engineering background, by-the-book tactics', survivalBonus: 'Wolf 359 survivor — knows when to fight dirty' },
+  { name: 'Commander Raffi Musiker', role: 'Intelligence/Security', specialty: 'Intelligence gathering, combat, infiltration', survivalBonus: 'Starfleet Intelligence training' },
+  // LD
+  { name: 'Ensign Beckett Mariner', role: 'Security/Generalist', specialty: 'Combat, insubordination, actually competent at everything', survivalBonus: 'Has been demoted so many times that death fears HER' },
+  { name: 'Ensign Bradward Boimler', role: 'Command Track', specialty: 'Protocols, regulations, panic-fueled heroism', survivalBonus: 'Somehow always survives despite constant panic' },
+  // The classic
   { name: 'Ensign Expendable', role: 'Security', specialty: 'Drawing enemy fire', survivalBonus: 'None. Godspeed.' },
 ];
 
