@@ -60,6 +60,20 @@ parameters:
     type: boolean
     displayName: 'Use source tag name as version'
     default: false
+  - name: createRelease
+    type: boolean
+    displayName: 'Create tag / GitHub release'
+    default: true
+  - name: releaseType
+    type: string
+    displayName: 'Release type'
+    default: default
+    values:
+      - default
+      - release
+      - prerelease
+      - draft
+      - tagOnly
 
 # Self-owned variables.
 # - Only globally shared variables are imported at the root level because the
@@ -103,6 +117,14 @@ extends:
     # Version resolution.
     versionOverride: ${{ parameters.versionOverride }}
     useSourceTagNameForVersion: ${{ parameters.useSourceTagNameForVersion }}
+
+    # Release gating and type override.
+    # createRelease: false skips the release stage entirely (build+test+pack only).
+    # releaseType: override the release type at queue time instead of using the
+    #   environment-file defaults (dev=draft+prerelease, prod=full release).
+    #   Values: default | release | prerelease | draft | tagOnly
+    createRelease: ${{ parameters.createRelease }}
+    releaseType: ${{ parameters.releaseType }}
 
     # Security scanning is enabled by default in the shared template.
     # All three scanners (npm audit, Semgrep SAST, GitLeaks) run automatically
