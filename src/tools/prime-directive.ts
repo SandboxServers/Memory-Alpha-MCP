@@ -51,26 +51,31 @@ export function registerPrimeDirectiveTool(server: McpServer): void {
 
 function computeViolationScore(action: string): number {
   const lowerAction = action.toLowerCase();
-  let score = 30; // base
+  let positiveScore = 0; // total violation risk (capped)
+  let negativeScore = 0; // total risk reduction (capped)
 
   const highRiskTerms = ['technology', 'warp', 'weapon', 'interfere', 'reveal', 'identity', 'cure', 'disease'];
   const mediumRiskTerms = ['help', 'assist', 'contact', 'communicate', 'trade', 'share'];
   const lowRiskTerms = ['observe', 'study', 'scan', 'monitor', 'record'];
 
   for (const term of highRiskTerms) {
-    if (lowerAction.includes(term)) score += 15;
+    if (lowerAction.includes(term)) positiveScore += 15;
   }
   for (const term of mediumRiskTerms) {
-    if (lowerAction.includes(term)) score += 8;
+    if (lowerAction.includes(term)) positiveScore += 8;
   }
   for (const term of lowRiskTerms) {
-    if (lowerAction.includes(term)) score -= 10;
+    if (lowerAction.includes(term)) negativeScore += 10;
   }
 
-  if (lowerAction.includes('pre-warp') || lowerAction.includes('primitive')) score += 20;
-  if (lowerAction.includes('natural development')) score += 15;
+  if (lowerAction.includes('pre-warp') || lowerAction.includes('primitive')) positiveScore += 20;
+  if (lowerAction.includes('natural development')) positiveScore += 15;
 
-  return Math.max(0, Math.min(100, score));
+  // Cap contributions to prevent extreme stacking
+  const cappedPositive = Math.min(positiveScore, 50);
+  const cappedNegative = Math.min(negativeScore, 20);
+
+  return Math.max(0, Math.min(100, 30 + cappedPositive - cappedNegative));
 }
 
 function getViolationRating(score: number): { level: string; assessment: string } {

@@ -58,9 +58,9 @@ src/
     wikitext.ts          #   Main parser: wtf_wikipedia wrapper, disambiguation detection
     infobox.ts           #   Brace-balanced sidebar/infobox extraction with regex fallback
     sections.ts          #   Section extraction by heading
-  tools/                 # 24 MCP tool implementations
-  prompts/               # 16 Trek-themed prompt templates
-  resources/             # 4 static reference resources
+  tools/                 # 31 MCP tool implementations
+  prompts/               # 22 Trek-themed prompt templates
+  resources/             # 7 static reference resources
   utils/
     cache.ts             #   In-memory TTL cache with LRU eviction (5min TTL, 100 entries)
     logger.ts            #   console.error wrapper (never console.log - corrupts stdio)
@@ -80,7 +80,7 @@ src/
 | `console.error` only | `console.log` corrupts the stdio MCP transport |
 | All responses as formatted text | Better for LLM consumption than raw JSON |
 
-## Tools (24)
+## Tools (31)
 
 ### Core Tools
 
@@ -176,6 +176,7 @@ Get Star Trek events, air dates, and birthdays for a specific date.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `date` | string | no | Date in "Month Day" format (e.g. "February 14"). Defaults to today. |
+| `timezone` | string | no | IANA timezone (e.g. "America/New_York"). Defaults to UTC when no date is provided. |
 
 #### `crew_manifest`
 Get the crew roster for a Star Trek starship or station.
@@ -293,7 +294,61 @@ Generate a Star Trek holodeck program designation, safety assessment, and malfun
 
 Returns program designation, classification, malfunction probability, environmental parameters, safety assessment, and known risks.
 
-## Prompts (16)
+#### `start_trivia_game`
+Generate a bundle of Star Trek trivia questions for a multi-player game session. Returns a game_id and question set for Clara to track scores per player.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `num_questions` | number (3-10) | no | Number of questions to generate (default: 5) |
+| `difficulty` | "easy" \| "medium" \| "hard" | no | Difficulty level (default: "medium") |
+
+#### `check_trivia_answer`
+Check a player's trivia answer against the correct answer. Fully stateless — Clara passes the correct answer from the game bundle.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `player_answer` | string | yes | The player's answer (letter or full text) |
+| `correct_answer` | string | yes | The correct answer string (from start_trivia_game output) |
+| `player_name` | string | no | Player name for personalized response |
+
+#### `diplomatic_scenario`
+Generate a Star Trek diplomatic negotiation scenario between two factions, with positions, demands, and leverage points.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `faction_a` | string | yes | First faction (e.g. "Federation", "Klingon Empire") |
+| `faction_b` | string | yes | Second faction (e.g. "Romulan Star Empire") |
+| `dispute` | string | no | Optional subject of the dispute |
+
+#### `anomaly_of_the_week`
+Generate a Star Trek space anomaly with effects on the ship and possible resolutions — classic TNG vibes.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `severity` | "minor" \| "moderate" \| "critical" | no | How dangerous the anomaly is (default: "moderate") |
+
+#### `mirror_universe`
+Describe the mirror universe version of a character, ship, or event. Checks Memory Alpha for a dedicated mirror article.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `subject` | string | yes | The character, ship, or event to look up (e.g. "Spock", "Benjamin Sisko") |
+
+#### `first_contact_assessment`
+Given a species name, look it up and assess warp capability, government type, and recommended first contact approach.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `species` | string | yes | The species to assess (e.g. "Bajoran", "Tamarian") |
+
+#### `temporal_incursion`
+Look up a known Trek time-travel event and describe the temporal paradox and its resolution.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `event` | string | no | Episode/event name (e.g. "City on the Edge of Forever"). Random if omitted. |
+
+## Prompts (22)
 
 | Prompt | Parameters | Description |
 |--------|------------|-------------|
@@ -313,8 +368,14 @@ Returns program designation, classification, malfunction probability, environmen
 | `guinan` | `situation` | Guinan-style wise bartender advice — cryptic but exactly what you needed |
 | `worf` | `situation` | Worf-style security assessment and tactical recommendation |
 | `counselor_troi` | `subject` | Counselor Troi empathic analysis — sense the feelings in your code or situation |
+| `seven_of_nine` | `subject` | Borg efficiency critique — precise, unsentimental, brutally optimal |
+| `kira_nerys` | `situation` | Bajoran resistance perspective — morally direct, politically sharp, passionately principled |
+| `janeway` | `problem` | Janeway-style determination — coffee, science, and sheer force of will |
+| `quark_deal` | `proposal` | Ferengi contract negotiation — profit, loss, and hidden clauses |
+| `data_inquiry` | `topic` | Data-style systematic analysis — thorough, earnest, peppered with probability estimates |
+| `holographic_doctor` | `subject` | EMH-style assessment — brilliant, sarcastic, perpetually underappreciated |
 
-## Resources (4)
+## Resources (7)
 
 | Resource | URI | Description |
 |----------|-----|-------------|
@@ -322,6 +383,9 @@ Returns program designation, classification, malfunction probability, environmen
 | Glossary | `trek://glossary` | Key Star Trek terminology: warp drive, phaser, transporter, tricorder, etc. |
 | Technobabble | `trek://technobabble` | Particles, fields, phenomena, engineering actions, and systems for generating authentic technobabble |
 | Starship Classes | `trek://starship-classes` | Ship classes by faction (Federation, Klingon, Romulan, Cardassian, Borg, Dominion) with era, role, and notable vessels |
+| Factions | `trek://factions` | Major Trek factions — government type, home region, notable treaties, diplomatic stance |
+| Prime Directive Cases | `trek://prime-directive-cases` | Canonical episodes where the Prime Directive was tested, with dilemmas and outcomes |
+| Technology Index | `trek://technology-index` | Key Trek technologies — how they work, notable failures, and series of origin |
 
 These are static reference resources with original descriptions (not Memory Alpha content), available for context without making API calls.
 
@@ -360,12 +424,12 @@ cd memory-alpha-mcp
 npm install
 npm run build   # Compile TypeScript
 npm run dev     # Run with tsx (hot reload)
-npm test        # Run test suite (117 tests)
+npm test        # Run test suite (146 tests)
 ```
 
 ### Testing
 
-The project includes 117 unit tests across 13 test files using [vitest](https://vitest.dev/):
+The project includes 146 unit tests across 17 test files using [vitest](https://vitest.dev/):
 
 | Test File | Coverage |
 |-----------|----------|
@@ -382,6 +446,10 @@ The project includes 117 unit tests across 13 test files using [vitest](https://
 | `tests/away-team.test.ts` | Away team builder: role analysis, team selection, mission risk assessment |
 | `tests/holodeck.test.ts` | Holodeck program: designation generation, classification, malfunction probability, safety assessment |
 | `tests/wikitext-parser.test.ts` | Wikitext parser: disambiguation detection, false-positive protection, and normalized link extraction |
+| `tests/red-shirt-capped.test.ts` | Red shirt survival: capped risk analysis, boundary testing |
+| `tests/prime-directive-capped.test.ts` | Prime Directive: capped violation score, boundary testing |
+| `tests/trivia-answer.test.ts` | Trivia answer checking: exact match, letter match, fuzzy match |
+| `tests/quote-filter.test.ts` | Quote extraction: matched pair validation, artifact rejection |
 
 ### MCP Inspector
 
@@ -406,7 +474,7 @@ All Star Trek content is dynamically fetched at runtime from [Memory Alpha's pub
 - Every tool response that includes Memory Alpha content automatically appends an attribution footer via `withAttribution()` in `src/utils/attribution.ts`
 - The footer reads: *"Source: Memory Alpha (CC-BY-SA) | Unofficial fan project - not affiliated with CBS/Paramount"*
 - Error responses that contain no Memory Alpha content do not include the footer
-- The four static resources (`trek://series`, `trek://glossary`, `trek://technobabble`, and `trek://starship-classes`) contain original reference descriptions, not Memory Alpha content
+- The seven static resources (`trek://series`, `trek://glossary`, `trek://technobabble`, `trek://starship-classes`, `trek://factions`, `trek://prime-directive-cases`, and `trek://technology-index`) contain original reference descriptions, not Memory Alpha content
 - No copyrighted material is embedded in the source code or package -- all wiki content is fetched live from the API and attributed at the point of display
 
 This approach satisfies CC-BY-SA requirements by providing attribution with every piece of content served, linking to the source, and identifying the license. The project acts as an API client, not a content host.

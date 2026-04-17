@@ -29,6 +29,13 @@ import { registerEpisodeRecommenderTool } from './tools/episode-recommender.js';
 import { registerCharacterTool } from './tools/character.js';
 import { registerHolodeckTool } from './tools/holodeck.js';
 import { registerListEpisodesTool } from './tools/list-episodes.js';
+import { registerStartTriviaGameTool } from './tools/start-trivia-game.js';
+import { registerCheckTriviaAnswerTool } from './tools/check-trivia-answer.js';
+import { registerDiplomaticScenarioTool } from './tools/diplomatic-scenario.js';
+import { registerAnomalyOfTheWeekTool } from './tools/anomaly-of-the-week.js';
+import { registerMirrorUniverseTool } from './tools/mirror-universe.js';
+import { registerFirstContactAssessmentTool } from './tools/first-contact-assessment.js';
+import { registerTemporalIncursionTool } from './tools/temporal-incursion.js';
 
 // Prompts & Resources
 import { registerPrompts } from './prompts/index.js';
@@ -69,6 +76,13 @@ registerEpisodeRecommenderTool(server);
 registerCharacterTool(server);
 registerHolodeckTool(server);
 registerListEpisodesTool(server);
+registerStartTriviaGameTool(server);
+registerCheckTriviaAnswerTool(server);
+registerDiplomaticScenarioTool(server);
+registerAnomalyOfTheWeekTool(server);
+registerMirrorUniverseTool(server);
+registerFirstContactAssessmentTool(server);
+registerTemporalIncursionTool(server);
 
 // Register prompts and resources
 registerPrompts(server);

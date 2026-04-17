@@ -16,16 +16,27 @@ export function registerOnThisDayTool(server: McpServer): void {
     'Get Star Trek events, air dates, and birthdays for a specific date',
     {
       date: z.string().max(200).optional().describe('Date in "Month Day" format (e.g. "February 14"). Defaults to today.'),
+      timezone: z.string().max(100).optional().describe('IANA timezone (e.g. "America/New_York"). Defaults to UTC when no date is provided.'),
     },
-    async ({ date }) => {
+    async ({ date, timezone }) => {
       try {
         let dateStr: string;
         if (date) {
           dateStr = date;
         } else {
-          // Note: uses server-local time; may differ from user's timezone
-          const now = new Date();
-          dateStr = `${MONTH_NAMES[now.getMonth()]} ${now.getDate()}`;
+          const tz = timezone ?? 'UTC';
+          try {
+            const formatter = new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'long', day: 'numeric' });
+            const parts = formatter.formatToParts(new Date());
+            const month = parts.find(p => p.type === 'month')?.value ?? MONTH_NAMES[new Date().getMonth()];
+            const day = parts.find(p => p.type === 'day')?.value ?? String(new Date().getDate());
+            dateStr = `${month} ${day}`;
+          } catch {
+            // Invalid timezone — fall back to UTC
+            const now = new Date();
+            const utcMonth = MONTH_NAMES[now.getUTCMonth()];
+            dateStr = `${utcMonth} ${now.getUTCDate()}`;
+          }
         }
 
         // Try "Month Day" format, then "Day Month" format (Memory Alpha uses both)

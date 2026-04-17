@@ -41,10 +41,14 @@ export function registerWhoSaidItTool(server: McpServer): void {
             const quotesSection = extractSection(wikitext, 'Memorable quotes') ??
               extractSection(wikitext, 'Quotes');
             if (quotesSection && quotesSection.length > 20) {
-              // Extract individual quotes (lines starting with " or containing quoted text)
-              const lines = quotesSection.split('\n').filter(l =>
-                l.includes('"') && l.trim().length > 20 && l.trim().length < 300
-              );
+              // Extract individual quotes (lines containing matched "..." pairs, 20-300 chars)
+              const lines = quotesSection.split('\n').filter(l => {
+                const trimmed = l.trim();
+                if (trimmed.length < 20 || trimmed.length > 300) return false;
+                // Look for a matched pair of quotes with ≥20 chars between them
+                const quoteMatch = trimmed.match(/"([^"]{20,})"/);
+                return quoteMatch !== null;
+              });
               if (lines.length > 0) {
                 const line = lines[Math.floor(Math.random() * lines.length)];
                 quote = line.replace(/^[*:\s]+/, '').trim();
