@@ -46,7 +46,8 @@ variables:
     value: 'v{1}'
 
   # Safety gate that limits release creation to tag-triggered runs.
-  # Leave this as `'true'` when releases should only happen from pushed tags.
+  # Leave this as `'true'` when releases should normally happen only from pushed
+  # tags. A queue-time `versionOverride` can still bypass this gate on purpose.
   - name: releaseFromTagOnly
     value: 'true'
 

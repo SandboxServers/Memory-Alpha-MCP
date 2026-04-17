@@ -13,6 +13,8 @@
 # - `environmentVariableTemplateDirectory`
 # - `vmImage`
 # - `environments`
+# - `versionOverride`
+# - `useSourceTagNameForVersion`
 # - `buildStageName`
 # - `releaseStageName`
 # - `preBuildSteps`
@@ -46,6 +48,11 @@ pr:
 #   run can target dev, staging, prod, or any supported combination.
 # - `stringList` is only available at the root pipeline level, so the shared
 #   template accepts it as an `object` parameter on the other side.
+# - `versionOverride` defaults to the sentinel value `auto`, which means
+#   “use the normal version resolution flow”.
+# - `useSourceTagNameForVersion` derives the package version from the triggering
+#   git tag name when enabled.
+# - If both are supplied, `versionOverride` wins.
 parameters:
   - name: environments
     type: stringList
@@ -56,6 +63,14 @@ parameters:
       - dev
       - staging
       - prod
+  - name: versionOverride
+    type: string
+    displayName: 'Version override'
+    default: auto
+  - name: useSourceTagNameForVersion
+    type: boolean
+    displayName: 'Use source tag name as version'
+    default: false
 
 # Self-owned variables.
 # - Only globally shared variables are imported at the root level because the
@@ -100,6 +115,19 @@ extends:
 
     # Selected release environments from the queue-time multi-select control.
     environments: ${{ parameters.environments }}
+
+    # Optional queue-time version override.
+    # - Leave as `auto` to keep the normal package.json/tag-based resolution.
+    # - Set an explicit value like `1.2.3-dev.4` to force that version for the
+    #   build artifact and release metadata regardless of branch.
+    versionOverride: ${{ parameters.versionOverride }}
+
+    # Optional queue-time version source toggle.
+    # - When `true`, the shared template derives `PackageVersion` from the
+    #   triggering git tag name, normalizing a leading `v` when present.
+    # - This expects a tag-triggered run.
+    # - `versionOverride` takes precedence when both are supplied.
+    useSourceTagNameForVersion: ${{ parameters.useSourceTagNameForVersion }}
 
     # Optional: rename the build stage in the Azure DevOps UI.
     # buildStageName: 'Build'
